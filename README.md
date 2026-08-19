@@ -10,12 +10,16 @@ Su GitHub, in questo repository:
 
 1. **Settings** → **Pages** (menù di sinistra).
 2. In *Build and deployment* → *Source* scegli **Deploy from a branch**.
-3. *Branch*: il branch che contiene questi file, cartella **/ (root)**. Salva.
+3. *Branch*: **`claude/web-app-home-screen-icon-p0sr17`** (è già il branch
+   predefinito del repository), cartella **/ (root)**. Salva.
 4. Dopo un paio di minuti il sito è online a:
 
    **https://meaulsen.github.io/RuotaDellaSfiga/**
 
 Se la pagina dà 404, aspetta ancora un minuto e ricarica: la prima pubblicazione è lenta.
+
+> Se un domani rinomini il branch (per esempio in `main`), ricordati di rimettere
+> il nome giusto in *Settings → Pages*.
 
 ## 2. Mettere l'icona sulla Home dell'iPhone
 
