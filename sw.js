@@ -2,7 +2,7 @@
    Tiene una copia locale del foglio: una volta aperto, l'app funziona
    anche senza rete. Cambia VERSION per forzare l'aggiornamento. */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = `cartellone-${VERSION}`;
 
 const ASSETS = [

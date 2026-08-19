@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Cartellone lavori di casa</title>
-<meta name="description" content="Il cartellone dei lavori di casa: chi ha tempo, fa. Da riempire, firmare e stampare.">
+<title>Chi ha tempo, fa</title>
+<meta name="description" content="I lavori di casa divisi in due: tocchi «fatto», l'app tiene il conto e dice chi offre il caffè.">
 
 <!-- Web app: icona sulla Home e apertura a tutto schermo -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#223A2E">
+<meta name="color-scheme" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -23,315 +24,617 @@
 <style>
   :root{
     --paper:#FAF8F2;
+    --bg:#E7E4DA;
     --ink:#223A2E;
     --ink-soft:#5C6B60;
     --accent:#C79A26;
     --accent-deep:#8F6E14;
-    --line:#C9C7B8;
-    --tint:#ECEFE5;
-    --box:#FFFFFF;
-    --pad:13mm;          /* margine interno del foglio: lo usa anche l'etichetta dei gruppi */
+    --line:#DAD7C9;
+    --card:#FFFDF7;
+    --a:#223A2E;        /* colore della prima persona */
+    --b:#8F6E14;        /* colore della seconda */
+    --radius:16px;
   }
 
   *{box-sizing:border-box;}
 
-  html,body{margin:0;padding:0;background:#E7E4DA;color:var(--ink);
-    font-family:"Inter",system-ui,sans-serif;-webkit-text-size-adjust:100%;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;-webkit-text-size-adjust:100%;
+    -webkit-tap-highlight-color:transparent;}
+  body{padding-bottom:calc(28px + env(safe-area-inset-bottom));}
 
-  /* Screen framing */
-  body{display:flex;flex-direction:column;align-items:center;
-    padding:28px 16px calc(60px + env(safe-area-inset-bottom));}
+  button{font:inherit;color:inherit;cursor:pointer;}
 
-  /* Suggerimento "Aggiungi a Home" (solo nel browser, non nell'app installata) */
-  .install{width:210mm;max-width:100%;display:none;gap:10px;align-items:flex-start;
-    background:var(--ink);color:#F3F1E8;border-radius:14px;padding:12px 14px;margin-bottom:14px;
-    font-size:13px;line-height:1.45;box-shadow:0 6px 18px rgba(34,58,46,.18);}
+  .wrap{max-width:560px;margin:0 auto;
+    padding:0 max(14px, env(safe-area-inset-left)) 0 max(14px, env(safe-area-inset-right));}
+
+  /* ── Testata: titolo + settimana ─────────────────────────────── */
+  .appbar{position:sticky;top:0;z-index:20;background:rgba(231,228,218,.92);
+    backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-bottom:1px solid rgba(34,58,46,.10);padding-top:env(safe-area-inset-top);}
+  .appbar .wrap{padding-top:9px;padding-bottom:9px;}
+  .eyebrow{font-weight:600;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--accent-deep);margin:0;text-align:center;}
+  h1{font-family:"Fraunces";font-weight:900;font-size:23px;line-height:1;margin:0;
+    letter-spacing:-.01em;}
+  .h1-swash{display:inline-block;position:relative;isolation:isolate;}
+  .h1-swash::after{content:"";position:absolute;left:-1px;right:-1px;bottom:1px;height:6px;
+    background:var(--accent);opacity:.35;border-radius:4px;z-index:-1;}
+
+  .weeknav{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .weeknav button[hidden]{display:none;}
+  .weeknav button{width:32px;height:32px;flex:none;border:1.5px solid rgba(34,58,46,.18);
+    background:var(--card);border-radius:10px;font-size:17px;line-height:1;
+    display:flex;align-items:center;justify-content:center;}
+  .weeknav button:active{transform:scale(.94);}
+  .weeknav button[disabled]{opacity:.3;pointer-events:none;}
+  .weekwhen{flex:1;text-align:center;line-height:1.15;}
+  .weekwhen b{font-family:"Fraunces";font-weight:600;font-size:15.5px;display:block;}
+  .weekwhen span{font-size:10.5px;color:var(--ink-soft);letter-spacing:.02em;}
+  .today{border:none;background:var(--ink);color:#fff;font-size:11px;font-weight:600;
+    padding:5px 11px;border-radius:999px;width:auto !important;height:auto !important;}
+
+  /* ── Schede ──────────────────────────────────────────────────── */
+  .card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);
+    padding:14px;margin-top:14px;}
+  .lbl{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-deep);margin:0 0 10px;}
+
+  /* Chi sta segnando + bilancio, in un'unica scheda */
+  .people{display:flex;gap:10px;}
+  .person{flex:1;position:relative;border:1.5px solid var(--line);border-radius:12px;
+    padding:10px 10px 11px;background:var(--paper);text-align:center;
+    transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;}
+  .person[data-on="1"]{border-color:currentColor;background:#fff;
+    box-shadow:0 0 0 3px color-mix(in srgb, currentColor 14%, transparent);}
+  .person.pa{color:var(--a);--c:var(--a);} .person.pb{color:var(--b);--c:var(--b);}
+  .pick{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    border:none;background:transparent;padding:0;}
+  .badge{width:32px;height:32px;flex:none;border-radius:9px;background:var(--c);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Fraunces";font-weight:900;font-size:16px;}
+  .pcount{font-family:"Fraunces";font-weight:900;font-size:26px;line-height:1;color:var(--ink);}
+  .pcount small{font-family:"Inter";font-weight:500;font-size:10px;color:var(--ink-soft);
+    display:block;letter-spacing:.04em;margin-top:2px;}
+  .pname{width:100%;margin-top:9px;border:none;border-bottom:1.5px dotted var(--ink-soft);
+    background:transparent;text-align:center;font-size:16px;font-weight:600;color:var(--ink);
+    padding:3px 0;border-radius:0;}
+  .pname:focus{outline:none;border-bottom-color:currentColor;border-bottom-style:solid;}
+  .pname::placeholder{font-weight:500;color:#A8A79C;}
+  .ptag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+    font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    background:var(--c);color:#fff;padding:2px 8px;border-radius:999px;white-space:nowrap;}
+  .person[data-on="0"] .ptag{display:none;}
+
+  .verdict{font-family:"Fraunces";font-style:italic;font-size:14px;line-height:1.4;
+    color:var(--ink-soft);margin:12px 0 0;text-align:center;}
+  .verdict b{font-style:normal;font-weight:600;color:var(--ink);}
+
+  /* ── Gruppi di lavori ────────────────────────────────────────── */
+  .group{margin-top:18px;}
+  .group-tag{display:inline-block;font-weight:700;font-size:11px;letter-spacing:.06em;
+    color:#fff;background:var(--ink);padding:4px 14px;border-radius:999px;margin-bottom:2px;}
+  .group-tag.b{background:var(--accent-deep);}
+  .group .card{margin-top:8px;padding:2px 14px;}
+
+  .task{display:flex;align-items:center;gap:10px;padding:11px 0;
+    border-bottom:1px solid var(--line);}
+  .task:last-child{border-bottom:none;}
+  .t-main{min-width:0;flex:1;}
+  .t-name{font-size:13.5px;font-weight:500;line-height:1.25;}
+  .t-meta{font-size:10.5px;color:var(--ink-soft);margin-top:3px;font-style:italic;}
+  .t-meta b{font-style:normal;font-weight:600;color:var(--ink);}
+  .task.done .t-meta{color:var(--accent-deep);font-style:normal;font-weight:600;}
+  .task.done .t-meta b{color:var(--accent-deep);}
+
+  .slots{margin-left:auto;display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;
+    max-width:58%;}
+  .sig{width:30px;height:30px;flex:none;border-radius:8px;border:1.4px solid transparent;
+    background:currentColor;color:var(--a);display:flex;align-items:center;justify-content:center;
+    font-family:"Fraunces";font-weight:900;font-size:14px;
+    animation:pop .18s ease-out;}
+  .sig span{color:#fff;}
+  .sig.b{color:var(--b);}
+  .sig:active{transform:scale(.9);}
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  .addsig{width:30px;height:30px;flex:none;border-radius:8px;background:transparent;
+    border:1.6px dashed currentColor;font-size:14px;line-height:1;font-family:"Fraunces";
+    font-weight:900;opacity:.45;display:flex;align-items:center;justify-content:center;padding:0;}
+  .addsig.a{color:var(--a);} .addsig.b{color:var(--b);}
+  .addsig:active{transform:scale(.9);background:#fff;}
+  .task.done .addsig{border-style:solid;border-color:var(--line);}
+
+  .del{border:none;background:transparent;color:#B9B7A8;font-size:17px;line-height:1;
+    padding:0 2px;margin-left:4px;flex:none;}
+
+  /* ── Aggiungi un lavoro ─────────────────────────────────────── */
+  .addform{display:flex;flex-wrap:wrap;gap:8px;}
+  .addform input,.addform select{flex:1 1 100%;font-size:16px;font-family:inherit;color:var(--ink);
+    background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .addform select{flex:1 1 auto;}
+  .addform input:focus,.addform select:focus{outline:none;border-color:var(--accent);}
+  .addform button{flex:0 0 auto;border:none;background:var(--ink);color:#fff;font-weight:600;
+    font-size:15px;padding:10px 18px;border-radius:10px;}
+  .addform button:active{transform:scale(.97);}
+
+  /* ── Note ───────────────────────────────────────────────────── */
+  .notes textarea{width:100%;min-height:82px;resize:vertical;font-family:inherit;font-size:16px;
+    line-height:1.5;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);
+    border-radius:12px;padding:11px 12px;}
+  .notes textarea:focus{outline:none;border-color:var(--accent);}
+
+  /* ── Piede ──────────────────────────────────────────────────── */
+  .motto{text-align:center;font-family:"Fraunces";font-style:italic;font-size:13px;
+    color:var(--ink-soft);margin:6px 0 12px;}
+  .reset{display:block;margin:0 auto;border:1.5px solid var(--line);background:transparent;
+    color:var(--ink-soft);font-size:12.5px;padding:9px 16px;border-radius:999px;}
+
+  /* ── Suggerimento "Aggiungi a Home" ─────────────────────────── */
+  .install{display:none;gap:10px;align-items:flex-start;background:var(--ink);color:#F3F1E8;
+    border-radius:14px;padding:12px 14px;margin-top:14px;font-size:13px;line-height:1.45;}
   body.show-install .install{display:flex;}
-  .install .txt{flex:1;}
   .install b{color:#fff;}
   .install .share{display:inline-block;border:1px solid rgba(243,241,232,.55);border-radius:5px;
     padding:0 5px;font-weight:600;}
   .install .close{border:none;background:transparent;color:#F3F1E8;font-size:20px;line-height:1;
-    padding:0 2px;cursor:pointer;opacity:.75;}
-  .install .close:hover{opacity:1;}
+    padding:0 2px;opacity:.75;}
 
-  .toolbar{width:210mm;max-width:100%;display:flex;justify-content:space-between;
-    align-items:center;margin-bottom:16px;gap:12px;}
-  .toolbar p{margin:0;font-size:13px;color:#6a6a5f;}
-  .btn{border:none;background:var(--ink);color:#fff;font-family:"Inter",sans-serif;
-    font-weight:600;font-size:14px;padding:10px 18px;border-radius:999px;cursor:pointer;
-    letter-spacing:.01em;transition:transform .12s ease, background .2s ease;
-    touch-action:manipulation;}
-  .btn:hover{background:#2f4d3d;transform:translateY(-1px);}
-  .btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+  /* ── Avviso in fondo allo schermo, con "Annulla" ────────────── */
+  .toast{position:fixed;left:50%;transform:translateX(-50%) translateY(120%);
+    bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;
+    display:flex;align-items:center;gap:14px;max-width:calc(100% - 28px);
+    background:var(--ink);color:#F3F1E8;border-radius:999px;padding:11px 12px 11px 18px;
+    font-size:13.5px;box-shadow:0 8px 26px rgba(34,58,46,.28);
+    transition:transform .22s cubic-bezier(.2,.9,.3,1.2);}
+  .toast.on{transform:translateX(-50%) translateY(0);}
+  .toast button{border:none;background:rgba(255,255,255,.14);color:#fff;font-weight:600;
+    font-size:13px;padding:6px 13px;border-radius:999px;white-space:nowrap;}
 
-  /* The sheet */
-  .sheet{width:210mm;max-width:100%;min-height:297mm;background:var(--paper);
-    padding:14mm var(--pad) 12mm;box-shadow:0 10px 40px rgba(0,0,0,.18);
-    display:flex;flex-direction:column;}
-
-  /* Masthead */
-  .masthead{border:2px solid var(--ink);border-radius:14px;padding:14px 20px 16px;
-    position:relative;text-align:center;}
-  .masthead::after{content:"";position:absolute;inset:5px;border:1px dashed var(--accent);
-    border-radius:9px;pointer-events:none;}
-  .eyebrow{font-family:"Inter";font-weight:600;font-size:11px;letter-spacing:.28em;
-    text-transform:uppercase;color:var(--accent-deep);margin:0 0 2px;}
-  h1{font-family:"Fraunces";font-weight:900;font-size:40px;line-height:.95;margin:2px 0 6px;
-    letter-spacing:-.01em;}
-  .h1-swash{display:inline-block;position:relative;isolation:isolate;}
-  .h1-swash::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:7px;
-    background:var(--accent);opacity:.35;border-radius:4px;z-index:-1;}
-  .sub{font-family:"Fraunces";font-style:italic;font-weight:500;font-size:15px;
-    color:var(--ink-soft);margin:0;}
-
-  /* Legend + week */
-  .topgrid{display:flex;gap:12px;margin:12px 0 4px;}
-  .card{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;}
-  .card .lbl{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--accent-deep);margin-bottom:6px;}
-  .who{display:flex;align-items:center;gap:9px;}
-  .who + .who{margin-top:8px;}
-  .initial{width:30px;height:30px;border:1.5px solid var(--ink);border-radius:7px;flex:none;}
-  .nameline{flex:1;border-bottom:1.5px dotted var(--ink-soft);height:22px;}
-  .weekcard{flex:.9;display:flex;flex-direction:column;justify-content:center;}
-  .weekline{display:flex;align-items:baseline;gap:6px;font-family:"Fraunces";
-    font-size:15px;color:var(--ink);}
-  .weekline .blank{flex:1;border-bottom:1.5px dotted var(--ink-soft);}
-  .weekline + .weekline{margin-top:12px;}
-  .hint{font-size:10px;color:var(--ink-soft);margin-top:7px;line-height:1.35;}
-
-  /* Table */
-  table{width:100%;border-collapse:collapse;margin-top:12px;table-layout:fixed;}
-  th.head-freq,th.head-do{font-family:"Inter";font-weight:700;font-size:9px;
-    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
-    padding:0 0 5px;text-align:center;}
-  th.head-task{text-align:left;font-family:"Inter";font-weight:700;font-size:9px;
-    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);padding:0 0 5px 2px;}
-  col.c-task{width:auto;}
-  col.c-freq{width:74px;}
-  col.c-do{width:172px;}
-
-  tr.group td{padding:9px 0 3px;}
-  .group-tag{display:inline-block;font-family:"Inter";font-weight:700;font-size:11px;
-    letter-spacing:.06em;color:#fff;background:var(--ink);padding:3px 12px;border-radius:0 12px 12px 0;
-    margin-left:calc(-1 * var(--pad));padding-left:var(--pad);}
-  .group-tag.b{background:var(--accent-deep);}
-
-  tr.task{border-bottom:1px solid var(--line);}
-  tr.task td{padding:6.5px 0;vertical-align:middle;}
-  .taskname{font-size:12.5px;font-weight:500;color:var(--ink);padding-left:2px;}
-  .freq{text-align:center;font-size:10px;color:var(--ink-soft);font-style:italic;}
-  .freq-sm{display:none;font-size:10px;font-style:italic;color:var(--ink-soft);
-    margin-top:1px;font-weight:400;}
-  .boxes{display:flex;gap:6px;justify-content:flex-end;}
-  .tick{width:23px;height:23px;border:1.4px solid var(--line);border-radius:5px;background:var(--box);}
-  tr.custom .taskname{color:var(--ink-soft);}
-  tr.custom .cust-line{border-bottom:1.4px dotted var(--ink-soft);height:15px;margin-right:8px;}
-
-  /* Footer: balance + notes */
-  .footer{margin-top:auto;padding-top:14px;display:flex;gap:12px;align-items:stretch;}
-  .balance{flex:1.15;border:2px solid var(--ink);border-radius:12px;padding:11px 14px;background:#fff;}
-  .balance h3{font-family:"Fraunces";font-weight:600;font-size:16px;margin:0 0 3px;}
-  .balance .sm{font-size:10px;color:var(--ink-soft);margin:0 0 10px;line-height:1.35;}
-  .tallyrow{display:flex;gap:14px;}
-  .tally{flex:1;text-align:center;}
-  .tally .who-name{border-bottom:1.4px dotted var(--ink-soft);height:20px;margin-bottom:6px;}
-  .tally .count{border:1.5px solid var(--line);border-radius:8px;height:40px;background:var(--paper);}
-  .notes{flex:1;border:1.5px dashed var(--accent-deep);border-radius:12px;padding:10px 14px;background:#fff;}
-  .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--accent-deep);margin-bottom:8px;}
-  .notes .nl{border-bottom:1px dotted var(--line);height:20px;}
-  .motto{text-align:center;font-family:"Fraunces";font-style:italic;font-size:12.5px;
-    color:var(--ink-soft);margin:11px 0 0;}
-
-  /* Telefono: il foglio riempie lo schermo e la colonna "ogni quanto"
-     scende sotto al nome del lavoro, per lasciare spazio alle caselle. */
-  @media (max-width:700px){
-    :root{--pad:16px;}
-    body{padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left);}
-    .install{margin:calc(12px + env(safe-area-inset-top)) 12px 0;width:auto;align-self:stretch;}
-    .toolbar{padding:16px 16px 0;margin-bottom:12px;flex-direction:column;align-items:stretch;gap:10px;}
-    .toolbar p{font-size:12.5px;}
-    .btn{width:100%;padding:13px 18px;font-size:15px;}
-    .sheet{min-height:auto;box-shadow:none;
-      padding:20px var(--pad) calc(26px + env(safe-area-inset-bottom));}
-    .masthead{padding:12px 14px 14px;}
-    h1{font-size:clamp(26px,8.5vw,40px);}
-    .sub{font-size:13.5px;}
-    .topgrid{flex-direction:column;gap:10px;margin-bottom:2px;}
-    table{table-layout:auto;}
-    col.c-freq{width:0;}
-    col.c-do{width:1%;}
-    th.head-freq,td.freq{display:none;}
-    .freq-sm{display:block;}
-    .taskname{font-size:13px;padding-right:10px;}
-    th.head-do{text-align:right;}
-    td.do{width:1%;white-space:nowrap;}
-    .boxes{gap:4px;}
-    .tick{width:20px;height:20px;}
-    .footer{flex-direction:column;}
-    .motto{font-size:13px;margin-top:14px;}
+  @media (min-width:520px){
+    h1{font-size:30px;}
+    .t-name{font-size:14.5px;}
   }
 
-  /* Print */
-  @page{size:A4;margin:0;}
   @media print{
-    :root{--pad:13mm;}
-    html,body{background:#fff;padding:0;margin:0;}
-    .toolbar,.install{display:none !important;}
-    .freq-sm{display:none !important;}
-    th.head-freq,td.freq{display:table-cell !important;}
-    table{table-layout:fixed !important;}
-    col.c-task{width:auto !important;}
-    col.c-freq{width:74px !important;}
-    col.c-do{width:172px !important;}
-    .tick{width:23px !important;height:23px !important;}
-    .topgrid,.footer{flex-direction:row !important;}
-    .sheet{box-shadow:none;width:210mm;min-height:297mm;margin:0;
-      padding:14mm var(--pad) 12mm;
-      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    h1{font-size:40px !important;}
+    .appbar{position:static;background:none;}
+    .weeknav button,.install,.addform,.reset,.toast,.addsig,.del{display:none !important;}
+    body{background:#fff;}
+    .card{break-inside:avoid;}
   }
 </style>
 </head>
 <body>
 
+<header class="appbar">
+  <div class="wrap">
+    <h1>Chi ha <span class="h1-swash">tempo</span>, fa</h1>
+    <div class="weeknav">
+      <button id="prev" type="button" aria-label="Settimana precedente">&lsaquo;</button>
+      <div class="weekwhen"><b id="wlabel"></b><span id="wsub"></span></div>
+      <button id="next" type="button" aria-label="Settimana successiva">&rsaquo;</button>
+      <button id="today" class="today" type="button" hidden>Oggi</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
   <div class="install" role="note">
     <div class="txt">Per tenerlo a portata di dito: tocca <span class="share">Condividi</span>
-      e poi <b>«Aggiungi a Home»</b>. Comparirà l'icona e il cartellone si aprirà a tutto schermo.</div>
+      e poi <b>«Aggiungi a Home»</b>. Comparirà l'icona e l'app si aprirà a tutto schermo.</div>
     <button class="close" type="button" aria-label="Chiudi il suggerimento">&times;</button>
   </div>
 
-  <div class="toolbar">
-    <p>Riempi i nomi, appendi sul frigo e segna con le tue iniziali ogni volta che fai un lavoro.</p>
-    <button class="btn" type="button" onclick="window.print()">Stampa il cartellone</button>
-  </div>
-
-  <div class="sheet">
-
-    <div class="masthead">
-      <p class="eyebrow">Casa nostra · turni condivisi</p>
-      <h1>Chi ha <span class="h1-swash">tempo</span>, fa</h1>
-      <p class="sub">i lavori di casa, divisi in due (senza litigare)</p>
-    </div>
-
-    <div class="topgrid">
-      <div class="card">
-        <div class="lbl">Le due squadre</div>
-        <div class="who"><span class="initial"></span><span class="nameline"></span></div>
-        <div class="who"><span class="initial"></span><span class="nameline"></span></div>
+  <section class="card">
+    <p class="lbl">Chi sta segnando</p>
+    <div class="people">
+      <div class="person pa" data-p="a" data-on="1">
+        <span class="ptag">sei tu</span>
+        <button class="pick" type="button" aria-pressed="true">
+          <span class="badge"></span>
+          <span class="pcount"><span class="n">0</span><small>firme</small></span>
+        </button>
+        <input class="pname" type="text" placeholder="Nome" maxlength="18"
+               autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Nome della prima persona">
       </div>
-      <div class="card weekcard">
-        <div class="weekline"><span>Settimana dal</span><span class="blank"></span></div>
-        <div class="weekline"><span>al</span><span class="blank"></span></div>
-        <p class="hint">Scegliete un'iniziale o un simbolo a testa: lo userete per firmare le caselle.</p>
+      <div class="person pb" data-p="b" data-on="0">
+        <span class="ptag">sei tu</span>
+        <button class="pick" type="button" aria-pressed="false">
+          <span class="badge"></span>
+          <span class="pcount"><span class="n">0</span><small>firme</small></span>
+        </button>
+        <input class="pname" type="text" placeholder="Nome" maxlength="18"
+               autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Nome della seconda persona">
       </div>
     </div>
+    <p class="verdict" id="verdict"></p>
+  </section>
 
-    <table>
-      <colgroup>
-        <col class="c-task"><col class="c-freq"><col class="c-do">
-      </colgroup>
-      <thead>
-        <tr>
-          <th class="head-task">Cosa c'è da fare</th>
-          <th class="head-freq">Ogni quanto</th>
-          <th class="head-do">L'ho fatto io &nbsp;→&nbsp; firma qui</th>
-        </tr>
-      </thead>
-      <tbody>
+  <div id="lista"></div>
 
-        <tr class="group"><td colspan="3"><span class="group-tag">Cucina &amp; pasti</span></td></tr>
-        <tr class="task"><td class="taskname">Lavare i piatti / caricare la lavastoviglie</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Svuotare la lavastoviglie</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Pulire piano e fornelli</td><td class="freq">2–3× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Cucinare la cena</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Apparecchiare / sparecchiare</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+  <section class="card">
+    <p class="lbl">Un lavoro che qui non c'è</p>
+    <form class="addform" id="addform">
+      <input id="newname" type="text" placeholder="Portare fuori il cane…" maxlength="60"
+             autocomplete="off" aria-label="Nome del nuovo lavoro">
+      <select id="newfreq" aria-label="Ogni quanto">
+        <option value="7">ogni giorno</option>
+        <option value="3">2–3 volte a settimana</option>
+        <option value="2" selected>2 volte a settimana</option>
+        <option value="1">1 volta a settimana</option>
+      </select>
+      <button type="submit">Aggiungi</button>
+    </form>
+  </section>
 
-        <tr class="group"><td colspan="3"><span class="group-tag b">Pulizie di casa</span></td></tr>
-        <tr class="task"><td class="taskname">Passare l'aspirapolvere</td><td class="freq">2× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Lavare i pavimenti</td><td class="freq">1× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Spolverare</td><td class="freq">1× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Pulire il bagno</td><td class="freq">1× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+  <section class="card notes">
+    <p class="lbl">Da non dimenticare</p>
+    <textarea id="note" placeholder="Chiamare l'idraulico, comprare il detersivo…"
+              aria-label="Note della settimana"></textarea>
+  </section>
 
-        <tr class="group"><td colspan="3"><span class="group-tag">Bucato</span></td></tr>
-        <tr class="task"><td class="taskname">Fare la lavatrice</td><td class="freq">2–3× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Stendere il bucato</td><td class="freq">2–3× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Piegare, riporre e stirare</td><td class="freq">1–2× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+  <p class="eyebrow" style="margin-top:22px">Casa nostra · turni condivisi</p>
+  <p class="motto">La casa si tiene in due · chi ne ha fatti meno, offre il caffè ☕</p>
+  <button class="reset" id="reset" type="button">Azzera questa settimana</button>
 
-        <tr class="group"><td colspan="3"><span class="group-tag b">Fuori &amp; varie</span></td></tr>
-        <tr class="task"><td class="taskname">Fare la spesa</td><td class="freq">1–2× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Rifiuti e differenziata</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Innaffiare le piante</td><td class="freq">2× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task"><td class="taskname">Cambio lenzuola / asciugamani</td><td class="freq">1× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task custom"><td class="taskname"><div class="cust-line"></div></td><td class="freq">—</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
-        <tr class="task custom"><td class="taskname"><div class="cust-line"></div></td><td class="freq">—</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+</main>
 
-      </tbody>
-    </table>
-
-    <div class="footer">
-      <div class="balance">
-        <h3>Bilancio della settimana</h3>
-        <p class="sm">Contate le firme di ciascuno: se siete più o meno pari, missione compiuta.</p>
-        <div class="tallyrow">
-          <div class="tally"><div class="who-name"></div><div class="count"></div></div>
-          <div class="tally"><div class="who-name"></div><div class="count"></div></div>
-        </div>
-      </div>
-      <div class="notes">
-        <div class="lbl">Da non dimenticare</div>
-        <div class="nl"></div><div class="nl" style="margin-top:14px"></div><div class="nl" style="margin-top:14px"></div>
-      </div>
-    </div>
-
-    <p class="motto">La casa si tiene in due · chi ne ha fatti meno, offre il caffè ☕</p>
-
-  </div>
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span id="toast-msg"></span>
+  <button id="toast-undo" type="button">Annulla</button>
+</div>
 
 <script>
 (function () {
   "use strict";
 
-  // Su schermo stretto la colonna "ogni quanto" sparisce: la ripetiamo
-  // sotto al nome del lavoro (solo qui, così il markup resta uno).
-  document.querySelectorAll("tr.task").forEach(function (row) {
-    var freq = row.querySelector(".freq");
-    var name = row.querySelector(".taskname");
-    if (!freq || !name) return;
-    var text = freq.textContent.trim();
-    if (!text || text === "—") return;
-    var small = document.createElement("span");
-    small.className = "freq-sm";
-    small.textContent = text;
-    name.appendChild(small);
-  });
+  /* ─────────────────────────────────────────────────────────────
+     I lavori. "obiettivo" è quante volte andrebbe fatto in una
+     settimana: è la vecchia colonna "ogni quanto", che qui serve
+     a mostrare a che punto siete.
+     ───────────────────────────────────────────────────────────── */
+  var GRUPPI = [
+    { nome: "Cucina & pasti", tinta: "", lavori: [
+      ["piatti",       "Lavare i piatti / caricare la lavastoviglie", 7],
+      ["svuotare",     "Svuotare la lavastoviglie",                   7],
+      ["fornelli",     "Pulire piano e fornelli",                     3],
+      ["cena",         "Cucinare la cena",                            7],
+      ["tavola",       "Apparecchiare / sparecchiare",                7]
+    ]},
+    { nome: "Pulizie di casa", tinta: "b", lavori: [
+      ["aspirapolvere","Passare l'aspirapolvere",                     2],
+      ["pavimenti",    "Lavare i pavimenti",                          1],
+      ["spolverare",   "Spolverare",                                  1],
+      ["bagno",        "Pulire il bagno",                             1]
+    ]},
+    { nome: "Bucato", tinta: "", lavori: [
+      ["lavatrice",    "Fare la lavatrice",                           3],
+      ["stendere",     "Stendere il bucato",                          3],
+      ["piegare",      "Piegare, riporre e stirare",                  2]
+    ]},
+    { nome: "Fuori & varie", tinta: "b", lavori: [
+      ["spesa",        "Fare la spesa",                               2],
+      ["rifiuti",      "Rifiuti e differenziata",                     7],
+      ["piante",       "Innaffiare le piante",                        2],
+      ["lenzuola",     "Cambio lenzuola / asciugamani",               1]
+    ]}
+  ];
 
-  // Il suggerimento "Aggiungi a Home" serve solo finché l'app non è installata.
-  var installed = window.matchMedia("(display-mode: standalone)").matches ||
-                  window.navigator.standalone === true;
-  var handheld = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
-                 window.matchMedia("(pointer: coarse)").matches;
-  var hidden = false;
-  try { hidden = localStorage.getItem("cartellone:install-hint") === "off"; } catch (e) {}
-  if (!installed && !hidden && handheld) {
-    document.body.classList.add("show-install");
+  var QUANDO = { 7: "ogni giorno", 3: "2–3 volte a settimana",
+                 2: "2 volte a settimana", 1: "1 volta a settimana" };
+  var MESI = ["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio",
+              "agosto","settembre","ottobre","novembre","dicembre"];
+  var MESI_BREVI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+  var CHIAVE = "cartellone:v1";
+
+  /* ── Settimane (da lunedì a domenica) ───────────────────────── */
+  function lunedi(d) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    return x;
   }
-  var closeBtn = document.querySelector(".install .close");
-  if (closeBtn) {
-    closeBtn.addEventListener("click", function () {
-      document.body.classList.remove("show-install");
-      try { localStorage.setItem("cartellone:install-hint", "off"); } catch (e) {}
+  function idSettimana(d) {
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) +
+           "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function piuGiorni(d, n) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  }
+  function etichettaSettimana(lun) {
+    var dom = piuGiorni(lun, 6);
+    if (lun.getMonth() === dom.getMonth()) {
+      return lun.getDate() + " – " + dom.getDate() + " " + MESI[dom.getMonth()];
+    }
+    return lun.getDate() + " " + MESI_BREVI[lun.getMonth()] + " – " +
+           dom.getDate() + " " + MESI_BREVI[dom.getMonth()];
+  }
+
+  /* ── Memoria (resta nel telefono) ───────────────────────────── */
+  var stato = { nomi: { a: "", b: "" }, attivo: "a", extra: [], settimane: {} };
+  try {
+    var salvato = JSON.parse(localStorage.getItem(CHIAVE) || "null");
+    if (salvato && typeof salvato === "object") {
+      stato.nomi = salvato.nomi || stato.nomi;
+      stato.attivo = salvato.attivo === "b" ? "b" : "a";
+      stato.extra = Array.isArray(salvato.extra) ? salvato.extra : [];
+      stato.settimane = salvato.settimane || {};
+    }
+  } catch (e) {}
+
+  function salva() {
+    // via le settimane e i lavori senza firme, così la memoria non si gonfia
+    Object.keys(stato.settimane).forEach(function (k) {
+      var s = stato.settimane[k];
+      Object.keys(s.firme || {}).forEach(function (id) {
+        if (!s.firme[id].length) delete s.firme[id];
+      });
+      if (!s.nota && !Object.keys(s.firme || {}).length) delete stato.settimane[k];
+    });
+    try { localStorage.setItem(CHIAVE, JSON.stringify(stato)); } catch (e) {}
+  }
+
+  function esc(t) {
+    return String(t).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
 
-  // Service worker: il cartellone resta consultabile anche senza rete.
+  var lunCorrente = lunedi(new Date());
+  var lunVisto = lunCorrente;
+
+  function scheda(k) {
+    var s = stato.settimane[k];
+    if (!s) { s = stato.settimane[k] = { firme: {}, nota: "" }; }
+    if (!s.firme) s.firme = {};
+    if (typeof s.nota !== "string") s.nota = "";
+    return s;
+  }
+  function settimana() { return scheda(idSettimana(lunVisto)); }
+  function firmeDi(k, id) {
+    var s = scheda(k);
+    if (!Array.isArray(s.firme[id])) s.firme[id] = [];
+    return s.firme[id];
+  }
+  function firme(id) { return firmeDi(idSettimana(lunVisto), id); }
+
+  /* ── Nomi e iniziali ────────────────────────────────────────── */
+  function nome(p) {
+    var n = (stato.nomi[p] || "").trim();
+    return n || (p === "a" ? "Persona 1" : "Persona 2");
+  }
+  function iniziale(p) {
+    var n = (stato.nomi[p] || "").trim();
+    return n ? n[0].toUpperCase() : (p === "a" ? "1" : "2");
+  }
+
+  /* ── Elenco completo dei lavori, gruppi + quelli aggiunti ───── */
+  function elenco() {
+    var gruppi = GRUPPI.map(function (g) {
+      return { nome: g.nome, tinta: g.tinta, lavori: g.lavori.map(function (l) {
+        return { id: l[0], nome: l[1], obiettivo: l[2], mio: false };
+      })};
+    });
+    if (stato.extra.length) {
+      gruppi.push({ nome: "I vostri lavori", tinta: "", lavori: stato.extra.map(function (l) {
+        return { id: l.id, nome: l.nome, obiettivo: l.obiettivo, mio: true };
+      })});
+    }
+    return gruppi;
+  }
+
+  /* ── Disegno della pagina ───────────────────────────────────── */
+  var lista = document.getElementById("lista");
+  var verdetto = document.getElementById("verdict");
+
+  function disegnaSettimana() {
+    document.getElementById("wlabel").textContent = etichettaSettimana(lunVisto);
+    var diff = Math.round((lunVisto - lunCorrente) / 604800000);
+    document.getElementById("wsub").textContent =
+      diff === 0 ? "questa settimana" :
+      diff === -1 ? "settimana scorsa" :
+      diff === 1 ? "settimana prossima" :
+      diff < 0 ? Math.abs(diff) + " settimane fa" : "fra " + diff + " settimane";
+    document.getElementById("today").hidden = diff === 0;
+    document.getElementById("note").value = settimana().nota;
+  }
+
+  function disegnaLavori() {
+    // il tasto per firmare porta l'iniziale di chi sta segnando (o un "+", se il nome manca)
+    var segno = (stato.nomi[stato.attivo] || "").trim() ? iniziale(stato.attivo) : "+";
+    var pezzi = elenco().map(function (g) {
+      var righe = g.lavori.map(function (l) {
+        var f = firme(l.id);
+        var fatto = f.length >= l.obiettivo;
+        var sigle = f.map(function (p, i) {
+          return '<button class="sig' + (p === "b" ? " b" : "") + '" type="button" data-id="' +
+                 l.id + '" data-i="' + i + '" aria-label="Togli la firma di ' + esc(nome(p)) + '">' +
+                 "<span>" + iniziale(p) + "</span></button>";
+        }).join("");
+        return '<div class="task' + (fatto ? " done" : "") + '">' +
+                 '<div class="t-main">' +
+                   '<div class="t-name">' + esc(l.nome) + "</div>" +
+                   '<div class="t-meta">' + (fatto ? "✓ " : "") + "<b>" + f.length + "</b> di " +
+                     l.obiettivo + " · " + QUANDO[l.obiettivo] + "</div>" +
+                 "</div>" +
+                 '<div class="slots">' + sigle +
+                   '<button class="addsig ' + stato.attivo + '" type="button" data-add="' + l.id +
+                     '" aria-label="Segna che l\'ha fatto ' + esc(nome(stato.attivo)) + '">' +
+                     segno + "</button>" +
+                 "</div>" +
+                 (l.mio ? '<button class="del" type="button" data-del="' + l.id +
+                          '" aria-label="Togli questo lavoro">&times;</button>' : "") +
+               "</div>";
+      }).join("");
+      return '<section class="group"><span class="group-tag ' + g.tinta + '">' + g.nome +
+             '</span><div class="card">' + righe + "</div></section>";
+    });
+    lista.innerHTML = pezzi.join("");
+  }
+
+  function disegnaBilancio() {
+    var conta = { a: 0, b: 0 };
+    var s = settimana();
+    Object.keys(s.firme).forEach(function (id) {
+      s.firme[id].forEach(function (p) { if (conta[p] !== undefined) conta[p]++; });
+    });
+
+    ["a", "b"].forEach(function (p) {
+      var card = document.querySelector('.person[data-p="' + p + '"]');
+      card.dataset.on = stato.attivo === p ? "1" : "0";
+      card.querySelector(".pick").setAttribute("aria-pressed", stato.attivo === p ? "true" : "false");
+      card.querySelector(".badge").textContent = iniziale(p);
+      card.querySelector(".n").textContent = conta[p];
+      card.querySelector(".pcount small").textContent = conta[p] === 1 ? "firma" : "firme";
+    });
+
+    var d = conta.a - conta.b;
+    if (!conta.a && !conta.b) {
+      verdetto.innerHTML = "Settimana ancora tutta da fare.";
+    } else if (d === 0) {
+      verdetto.innerHTML = "Pari e patta: <b>" + conta.a + "</b> a testa. Bravi.";
+    } else {
+      var avanti = d > 0 ? "a" : "b", dietro = d > 0 ? "b" : "a";
+      verdetto.innerHTML = "<b>" + nome(avanti) + "</b> è avanti di " + Math.abs(d) +
+        " · il caffè lo offre <b>" + nome(dietro) + "</b> ☕";
+    }
+  }
+
+  function disegna() {
+    disegnaSettimana();
+    disegnaLavori();
+    disegnaBilancio();
+  }
+
+  /* ── Avviso in fondo, con "Annulla" ─────────────────────────── */
+  var toast = document.getElementById("toast");
+  var toastMsg = document.getElementById("toast-msg");
+  var toastUndo = document.getElementById("toast-undo");
+  var annulla = null, timerToast;
+
+  function avvisa(testo, ripristina) {
+    toastMsg.textContent = testo;
+    annulla = ripristina || null;
+    toastUndo.hidden = !annulla;
+    toast.classList.add("on");
+    clearTimeout(timerToast);
+    timerToast = setTimeout(chiudiToast, 5000);
+  }
+  function chiudiToast() { toast.classList.remove("on"); annulla = null; }
+  toastUndo.addEventListener("click", function () {
+    if (annulla) { annulla(); salva(); disegna(); }
+    chiudiToast();
+  });
+
+  /* ── Tocchi sull'elenco ─────────────────────────────────────── */
+  lista.addEventListener("click", function (ev) {
+    var add = ev.target.closest("[data-add]");
+    if (add) {
+      firme(add.dataset.add).push(stato.attivo);
+      salva(); disegnaLavori(); disegnaBilancio();
+      return;
+    }
+
+    var sig = ev.target.closest(".sig");
+    if (sig) {
+      var k = idSettimana(lunVisto), tid = sig.dataset.id, i = +sig.dataset.i;
+      var chi = firmeDi(k, tid).splice(i, 1)[0];
+      salva(); disegnaLavori(); disegnaBilancio();
+      avvisa("Firma tolta", function () { firmeDi(k, tid).splice(i, 0, chi); });
+      return;
+    }
+
+    var del = ev.target.closest("[data-del]");
+    if (del) {
+      var id = del.dataset.del;
+      var pos = stato.extra.findIndex(function (l) { return l.id === id; });
+      if (pos < 0) return;
+      var tolto = stato.extra.splice(pos, 1)[0];
+      salva(); disegnaLavori(); disegnaBilancio();
+      avvisa("«" + tolto.nome + "» tolto", function () { stato.extra.splice(pos, 0, tolto); });
+    }
+  });
+
+  /* ── Chi sta segnando, e i nomi ─────────────────────────────── */
+  document.querySelectorAll(".person").forEach(function (card) {
+    var p = card.dataset.p;
+    var input = card.querySelector(".pname");
+    input.value = stato.nomi[p] || "";
+    card.addEventListener("click", function (ev) {
+      if (ev.target === input) return;
+      stato.attivo = p; salva(); disegnaLavori(); disegnaBilancio();
+    });
+    input.addEventListener("input", function () {
+      stato.nomi[p] = input.value;
+      salva(); disegnaLavori(); disegnaBilancio();
+    });
+  });
+
+  /* ── Settimana avanti e indietro ────────────────────────────── */
+  document.getElementById("prev").addEventListener("click", function () {
+    lunVisto = piuGiorni(lunVisto, -7); disegna();
+  });
+  document.getElementById("next").addEventListener("click", function () {
+    lunVisto = piuGiorni(lunVisto, 7); disegna();
+  });
+  document.getElementById("today").addEventListener("click", function () {
+    lunVisto = lunCorrente; disegna();
+  });
+
+  /* ── Note della settimana ───────────────────────────────────── */
+  var nota = document.getElementById("note");
+  nota.addEventListener("input", function () { settimana().nota = nota.value; salva(); });
+
+  /* ── Aggiungere un lavoro vostro ────────────────────────────── */
+  document.getElementById("addform").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var campo = document.getElementById("newname");
+    var testo = campo.value.trim();
+    if (!testo) { campo.focus(); return; }
+    stato.extra.push({
+      id: "mio-" + Date.now().toString(36),
+      nome: testo,
+      obiettivo: +document.getElementById("newfreq").value
+    });
+    campo.value = "";
+    campo.blur();
+    salva(); disegnaLavori();
+    avvisa("«" + testo + "» aggiunto");
+  });
+
+  /* ── Azzerare la settimana ──────────────────────────────────── */
+  document.getElementById("reset").addEventListener("click", function () {
+    var k = idSettimana(lunVisto);
+    var prima = stato.settimane[k];
+    if (!prima || !Object.keys(prima.firme).length) {
+      avvisa("Questa settimana è già vuota");
+      return;
+    }
+    stato.settimane[k] = { firme: {}, nota: prima.nota };
+    salva(); disegna();
+    avvisa("Settimana azzerata", function () { stato.settimane[k] = prima; });
+  });
+
+  /* ── Suggerimento "Aggiungi a Home" ─────────────────────────── */
+  var installata = window.matchMedia("(display-mode: standalone)").matches ||
+                   window.navigator.standalone === true;
+  var telefono = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
+                 window.matchMedia("(pointer: coarse)").matches;
+  var nascosto = false;
+  try { nascosto = localStorage.getItem("cartellone:install-hint") === "off"; } catch (e) {}
+  if (!installata && !nascosto && telefono) document.body.classList.add("show-install");
+  document.querySelector(".install .close").addEventListener("click", function () {
+    document.body.classList.remove("show-install");
+    try { localStorage.setItem("cartellone:install-hint", "off"); } catch (e) {}
+  });
+
+  /* ── Copia locale, per funzionare anche senza rete ──────────── */
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("sw.js").catch(function () {});
     });
   }
+
+  disegna();
 })();
 </script>
 

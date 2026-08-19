@@ -1,8 +1,8 @@
-# Cartellone lavori di casa
+# Chi ha tempo, fa
 
-Il cartellone «Chi ha tempo, fa» come **web app**: si apre a tutto schermo dall'icona
-sulla schermata Home dell'iPhone, funziona anche senza rete e si può ancora stampare
-su un A4 da appendere al frigo.
+I lavori di casa divisi in due, come **web app**: si apre a tutto schermo dall'icona
+sulla schermata Home dell'iPhone, tiene il conto delle firme settimana per settimana
+e funziona anche senza rete. Tutto resta sul telefono: non c'è nessun server.
 
 ## 1. Pubblicare il sito (una volta sola)
 
@@ -28,27 +28,46 @@ Se la pagina dà 404, aspetta ancora un minuto e ricarica: la prima pubblicazion
 2. Tocca il pulsante **Condividi** (il quadrato con la freccia verso l'alto).
 3. Scegli **«Aggiungi a Home»** e conferma.
 
-Compare l'icona con la lista dorata. Toccandola il cartellone si apre a tutto schermo,
-senza barra degli indirizzi e senza pulsanti del browser.
+Toccando l'icona l'app si apre a tutto schermo, senza barra degli indirizzi.
 
 > Da Chrome per iPhone il pulsante Condividi è nel menù **···** in basso a destra.
 > Su Android il pulsante è **«Installa app»** / «Aggiungi a schermata Home».
 
-## 3. Aggiornare il cartellone
+## 3. Come si usa
 
-Modifica `index.html` (i lavori sono le righe `<tr class="task">`) e fai commit.
-Il sito si aggiorna da solo dopo qualche decina di secondi.
+- **Scrivete i vostri nomi** nelle due schede in alto: l'iniziale diventa la firma.
+- **Toccate la scheda** di chi sta per segnare: è quella con la cornice colorata.
+  L'iniziale compare anche dentro il tasto tratteggiato di ogni lavoro, così si vede
+  sempre per chi vale il tocco.
+- **Tocca il tasto tratteggiato** accanto a un lavoro per firmarlo. Ogni tocco è una
+  firma: sotto al nome del lavoro compare *quante volte l'avete fatto su quante ne
+  servirebbero* in una settimana.
+- **Per togliere una firma** basta toccarla; compare «Annulla» in fondo allo schermo
+  per qualche secondo.
+- Il **bilancio** si aggiorna da solo e dice chi offre il caffè.
+- Le frecce **‹ ›** in alto spostano la settimana: le settimane vecchie restano lì,
+  ogni lunedì si riparte da zero senza dover cancellare niente.
+- **«Un lavoro che qui non c'è»** aggiunge i vostri lavori; la **×** li toglie.
+- Le note della settimana e i nomi si salvano da soli.
 
-L'app tiene una copia locale delle pagine per funzionare offline: se dopo un
-aggiornamento il telefono mostra ancora la versione vecchia, cambia `VERSION`
-in `sw.js` (per esempio da `v1` a `v2`) e fai commit — al primo avvio con rete
-l'app scarica la versione nuova.
+Tutto è salvato nella memoria del browser (`localStorage`), quindi ogni telefono ha la
+sua copia: i due telefoni non si sincronizzano fra loro.
+
+## 4. Cambiare i lavori di partenza
+
+L'elenco è la costante `GRUPPI` in fondo a `index.html`: ogni riga è
+`["codice", "Nome del lavoro", volte_a_settimana]`. Il *codice* è quello con cui le
+firme vengono salvate, quindi conviene non cambiarlo per i lavori già in uso.
+
+Dopo un aggiornamento il telefono potrebbe mostrare ancora la versione vecchia,
+perché l'app tiene una copia locale: cambia `VERSION` in `sw.js` (per esempio da
+`v2` a `v3`) e fai commit — al primo avvio con rete l'app si aggiorna.
 
 ## Cosa c'è dentro
 
 | File | A cosa serve |
 | --- | --- |
-| `index.html` | il cartellone: unica pagina, stile e testi |
+| `index.html` | tutta l'app: elenco lavori, stile e logica |
 | `manifest.webmanifest` | nome, icona, colori e apertura a tutto schermo |
 | `sw.js` | service worker: fa funzionare l'app anche senza rete |
 | `icons/` | icona per la Home (180/192/512 px, versione mascherabile e SVG) |
