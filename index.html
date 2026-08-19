@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cartellone lavori di casa</title>
+<meta name="description" content="Il cartellone dei lavori di casa: chi ha tempo, fa. Da riempire, firmare e stampare.">
+
+<!-- Web app: icona sulla Home e apertura a tutto schermo -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#223A2E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cartellone">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root{
+    --paper:#FAF8F2;
+    --ink:#223A2E;
+    --ink-soft:#5C6B60;
+    --accent:#C79A26;
+    --accent-deep:#8F6E14;
+    --line:#C9C7B8;
+    --tint:#ECEFE5;
+    --box:#FFFFFF;
+    --pad:13mm;          /* margine interno del foglio: lo usa anche l'etichetta dei gruppi */
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{margin:0;padding:0;background:#E7E4DA;color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;-webkit-text-size-adjust:100%;}
+
+  /* Screen framing */
+  body{display:flex;flex-direction:column;align-items:center;
+    padding:28px 16px calc(60px + env(safe-area-inset-bottom));}
+
+  /* Suggerimento "Aggiungi a Home" (solo nel browser, non nell'app installata) */
+  .install{width:210mm;max-width:100%;display:none;gap:10px;align-items:flex-start;
+    background:var(--ink);color:#F3F1E8;border-radius:14px;padding:12px 14px;margin-bottom:14px;
+    font-size:13px;line-height:1.45;box-shadow:0 6px 18px rgba(34,58,46,.18);}
+  body.show-install .install{display:flex;}
+  .install .txt{flex:1;}
+  .install b{color:#fff;}
+  .install .share{display:inline-block;border:1px solid rgba(243,241,232,.55);border-radius:5px;
+    padding:0 5px;font-weight:600;}
+  .install .close{border:none;background:transparent;color:#F3F1E8;font-size:20px;line-height:1;
+    padding:0 2px;cursor:pointer;opacity:.75;}
+  .install .close:hover{opacity:1;}
+
+  .toolbar{width:210mm;max-width:100%;display:flex;justify-content:space-between;
+    align-items:center;margin-bottom:16px;gap:12px;}
+  .toolbar p{margin:0;font-size:13px;color:#6a6a5f;}
+  .btn{border:none;background:var(--ink);color:#fff;font-family:"Inter",sans-serif;
+    font-weight:600;font-size:14px;padding:10px 18px;border-radius:999px;cursor:pointer;
+    letter-spacing:.01em;transition:transform .12s ease, background .2s ease;
+    touch-action:manipulation;}
+  .btn:hover{background:#2f4d3d;transform:translateY(-1px);}
+  .btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+
+  /* The sheet */
+  .sheet{width:210mm;max-width:100%;min-height:297mm;background:var(--paper);
+    padding:14mm var(--pad) 12mm;box-shadow:0 10px 40px rgba(0,0,0,.18);
+    display:flex;flex-direction:column;}
+
+  /* Masthead */
+  .masthead{border:2px solid var(--ink);border-radius:14px;padding:14px 20px 16px;
+    position:relative;text-align:center;}
+  .masthead::after{content:"";position:absolute;inset:5px;border:1px dashed var(--accent);
+    border-radius:9px;pointer-events:none;}
+  .eyebrow{font-family:"Inter";font-weight:600;font-size:11px;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--accent-deep);margin:0 0 2px;}
+  h1{font-family:"Fraunces";font-weight:900;font-size:40px;line-height:.95;margin:2px 0 6px;
+    letter-spacing:-.01em;}
+  .h1-swash{display:inline-block;position:relative;isolation:isolate;}
+  .h1-swash::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:7px;
+    background:var(--accent);opacity:.35;border-radius:4px;z-index:-1;}
+  .sub{font-family:"Fraunces";font-style:italic;font-weight:500;font-size:15px;
+    color:var(--ink-soft);margin:0;}
+
+  /* Legend + week */
+  .topgrid{display:flex;gap:12px;margin:12px 0 4px;}
+  .card{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;}
+  .card .lbl{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-deep);margin-bottom:6px;}
+  .who{display:flex;align-items:center;gap:9px;}
+  .who + .who{margin-top:8px;}
+  .initial{width:30px;height:30px;border:1.5px solid var(--ink);border-radius:7px;flex:none;}
+  .nameline{flex:1;border-bottom:1.5px dotted var(--ink-soft);height:22px;}
+  .weekcard{flex:.9;display:flex;flex-direction:column;justify-content:center;}
+  .weekline{display:flex;align-items:baseline;gap:6px;font-family:"Fraunces";
+    font-size:15px;color:var(--ink);}
+  .weekline .blank{flex:1;border-bottom:1.5px dotted var(--ink-soft);}
+  .weekline + .weekline{margin-top:12px;}
+  .hint{font-size:10px;color:var(--ink-soft);margin-top:7px;line-height:1.35;}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;margin-top:12px;table-layout:fixed;}
+  th.head-freq,th.head-do{font-family:"Inter";font-weight:700;font-size:9px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
+    padding:0 0 5px;text-align:center;}
+  th.head-task{text-align:left;font-family:"Inter";font-weight:700;font-size:9px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);padding:0 0 5px 2px;}
+  col.c-task{width:auto;}
+  col.c-freq{width:74px;}
+  col.c-do{width:172px;}
+
+  tr.group td{padding:9px 0 3px;}
+  .group-tag{display:inline-block;font-family:"Inter";font-weight:700;font-size:11px;
+    letter-spacing:.06em;color:#fff;background:var(--ink);padding:3px 12px;border-radius:0 12px 12px 0;
+    margin-left:calc(-1 * var(--pad));padding-left:var(--pad);}
+  .group-tag.b{background:var(--accent-deep);}
+
+  tr.task{border-bottom:1px solid var(--line);}
+  tr.task td{padding:6.5px 0;vertical-align:middle;}
+  .taskname{font-size:12.5px;font-weight:500;color:var(--ink);padding-left:2px;}
+  .freq{text-align:center;font-size:10px;color:var(--ink-soft);font-style:italic;}
+  .freq-sm{display:none;font-size:10px;font-style:italic;color:var(--ink-soft);
+    margin-top:1px;font-weight:400;}
+  .boxes{display:flex;gap:6px;justify-content:flex-end;}
+  .tick{width:23px;height:23px;border:1.4px solid var(--line);border-radius:5px;background:var(--box);}
+  tr.custom .taskname{color:var(--ink-soft);}
+  tr.custom .cust-line{border-bottom:1.4px dotted var(--ink-soft);height:15px;margin-right:8px;}
+
+  /* Footer: balance + notes */
+  .footer{margin-top:auto;padding-top:14px;display:flex;gap:12px;align-items:stretch;}
+  .balance{flex:1.15;border:2px solid var(--ink);border-radius:12px;padding:11px 14px;background:#fff;}
+  .balance h3{font-family:"Fraunces";font-weight:600;font-size:16px;margin:0 0 3px;}
+  .balance .sm{font-size:10px;color:var(--ink-soft);margin:0 0 10px;line-height:1.35;}
+  .tallyrow{display:flex;gap:14px;}
+  .tally{flex:1;text-align:center;}
+  .tally .who-name{border-bottom:1.4px dotted var(--ink-soft);height:20px;margin-bottom:6px;}
+  .tally .count{border:1.5px solid var(--line);border-radius:8px;height:40px;background:var(--paper);}
+  .notes{flex:1;border:1.5px dashed var(--accent-deep);border-radius:12px;padding:10px 14px;background:#fff;}
+  .notes .lbl{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-deep);margin-bottom:8px;}
+  .notes .nl{border-bottom:1px dotted var(--line);height:20px;}
+  .motto{text-align:center;font-family:"Fraunces";font-style:italic;font-size:12.5px;
+    color:var(--ink-soft);margin:11px 0 0;}
+
+  /* Telefono: il foglio riempie lo schermo e la colonna "ogni quanto"
+     scende sotto al nome del lavoro, per lasciare spazio alle caselle. */
+  @media (max-width:700px){
+    :root{--pad:16px;}
+    body{padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left);}
+    .install{margin:calc(12px + env(safe-area-inset-top)) 12px 0;width:auto;align-self:stretch;}
+    .toolbar{padding:16px 16px 0;margin-bottom:12px;flex-direction:column;align-items:stretch;gap:10px;}
+    .toolbar p{font-size:12.5px;}
+    .btn{width:100%;padding:13px 18px;font-size:15px;}
+    .sheet{min-height:auto;box-shadow:none;
+      padding:20px var(--pad) calc(26px + env(safe-area-inset-bottom));}
+    .masthead{padding:12px 14px 14px;}
+    h1{font-size:clamp(26px,8.5vw,40px);}
+    .sub{font-size:13.5px;}
+    .topgrid{flex-direction:column;gap:10px;margin-bottom:2px;}
+    table{table-layout:auto;}
+    col.c-freq{width:0;}
+    col.c-do{width:1%;}
+    th.head-freq,td.freq{display:none;}
+    .freq-sm{display:block;}
+    .taskname{font-size:13px;padding-right:10px;}
+    th.head-do{text-align:right;}
+    td.do{width:1%;white-space:nowrap;}
+    .boxes{gap:4px;}
+    .tick{width:20px;height:20px;}
+    .footer{flex-direction:column;}
+    .motto{font-size:13px;margin-top:14px;}
+  }
+
+  /* Print */
+  @page{size:A4;margin:0;}
+  @media print{
+    :root{--pad:13mm;}
+    html,body{background:#fff;padding:0;margin:0;}
+    .toolbar,.install{display:none !important;}
+    .freq-sm{display:none !important;}
+    th.head-freq,td.freq{display:table-cell !important;}
+    table{table-layout:fixed !important;}
+    col.c-task{width:auto !important;}
+    col.c-freq{width:74px !important;}
+    col.c-do{width:172px !important;}
+    .tick{width:23px !important;height:23px !important;}
+    .topgrid,.footer{flex-direction:row !important;}
+    .sheet{box-shadow:none;width:210mm;min-height:297mm;margin:0;
+      padding:14mm var(--pad) 12mm;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    h1{font-size:40px !important;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="install" role="note">
+    <div class="txt">Per tenerlo a portata di dito: tocca <span class="share">Condividi</span>
+      e poi <b>«Aggiungi a Home»</b>. Comparirà l'icona e il cartellone si aprirà a tutto schermo.</div>
+    <button class="close" type="button" aria-label="Chiudi il suggerimento">&times;</button>
+  </div>
+
+  <div class="toolbar">
+    <p>Riempi i nomi, appendi sul frigo e segna con le tue iniziali ogni volta che fai un lavoro.</p>
+    <button class="btn" type="button" onclick="window.print()">Stampa il cartellone</button>
+  </div>
+
+  <div class="sheet">
+
+    <div class="masthead">
+      <p class="eyebrow">Casa nostra · turni condivisi</p>
+      <h1>Chi ha <span class="h1-swash">tempo</span>, fa</h1>
+      <p class="sub">i lavori di casa, divisi in due (senza litigare)</p>
+    </div>
+
+    <div class="topgrid">
+      <div class="card">
+        <div class="lbl">Le due squadre</div>
+        <div class="who"><span class="initial"></span><span class="nameline"></span></div>
+        <div class="who"><span class="initial"></span><span class="nameline"></span></div>
+      </div>
+      <div class="card weekcard">
+        <div class="weekline"><span>Settimana dal</span><span class="blank"></span></div>
+        <div class="weekline"><span>al</span><span class="blank"></span></div>
+        <p class="hint">Scegliete un'iniziale o un simbolo a testa: lo userete per firmare le caselle.</p>
+      </div>
+    </div>
+
+    <table>
+      <colgroup>
+        <col class="c-task"><col class="c-freq"><col class="c-do">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="head-task">Cosa c'è da fare</th>
+          <th class="head-freq">Ogni quanto</th>
+          <th class="head-do">L'ho fatto io &nbsp;→&nbsp; firma qui</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr class="group"><td colspan="3"><span class="group-tag">Cucina &amp; pasti</span></td></tr>
+        <tr class="task"><td class="taskname">Lavare i piatti / caricare la lavastoviglie</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Svuotare la lavastoviglie</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Pulire piano e fornelli</td><td class="freq">2–3× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Cucinare la cena</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Apparecchiare / sparecchiare</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+
+        <tr class="group"><td colspan="3"><span class="group-tag b">Pulizie di casa</span></td></tr>
+        <tr class="task"><td class="taskname">Passare l'aspirapolvere</td><td class="freq">2× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Lavare i pavimenti</td><td class="freq">1× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Spolverare</td><td class="freq">1× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Pulire il bagno</td><td class="freq">1× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+
+        <tr class="group"><td colspan="3"><span class="group-tag">Bucato</span></td></tr>
+        <tr class="task"><td class="taskname">Fare la lavatrice</td><td class="freq">2–3× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Stendere il bucato</td><td class="freq">2–3× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Piegare, riporre e stirare</td><td class="freq">1–2× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+
+        <tr class="group"><td colspan="3"><span class="group-tag b">Fuori &amp; varie</span></td></tr>
+        <tr class="task"><td class="taskname">Fare la spesa</td><td class="freq">1–2× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Rifiuti e differenziata</td><td class="freq">ogni giorno</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Innaffiare le piante</td><td class="freq">2× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task"><td class="taskname">Cambio lenzuola / asciugamani</td><td class="freq">1× a sett.</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task custom"><td class="taskname"><div class="cust-line"></div></td><td class="freq">—</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+        <tr class="task custom"><td class="taskname"><div class="cust-line"></div></td><td class="freq">—</td><td class="do"><div class="boxes"><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i></div></td></tr>
+
+      </tbody>
+    </table>
+
+    <div class="footer">
+      <div class="balance">
+        <h3>Bilancio della settimana</h3>
+        <p class="sm">Contate le firme di ciascuno: se siete più o meno pari, missione compiuta.</p>
+        <div class="tallyrow">
+          <div class="tally"><div class="who-name"></div><div class="count"></div></div>
+          <div class="tally"><div class="who-name"></div><div class="count"></div></div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="lbl">Da non dimenticare</div>
+        <div class="nl"></div><div class="nl" style="margin-top:14px"></div><div class="nl" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <p class="motto">La casa si tiene in due · chi ne ha fatti meno, offre il caffè ☕</p>
+
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Su schermo stretto la colonna "ogni quanto" sparisce: la ripetiamo
+  // sotto al nome del lavoro (solo qui, così il markup resta uno).
+  document.querySelectorAll("tr.task").forEach(function (row) {
+    var freq = row.querySelector(".freq");
+    var name = row.querySelector(".taskname");
+    if (!freq || !name) return;
+    var text = freq.textContent.trim();
+    if (!text || text === "—") return;
+    var small = document.createElement("span");
+    small.className = "freq-sm";
+    small.textContent = text;
+    name.appendChild(small);
+  });
+
+  // Il suggerimento "Aggiungi a Home" serve solo finché l'app non è installata.
+  var installed = window.matchMedia("(display-mode: standalone)").matches ||
+                  window.navigator.standalone === true;
+  var handheld = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
+                 window.matchMedia("(pointer: coarse)").matches;
+  var hidden = false;
+  try { hidden = localStorage.getItem("cartellone:install-hint") === "off"; } catch (e) {}
+  if (!installed && !hidden && handheld) {
+    document.body.classList.add("show-install");
+  }
+  var closeBtn = document.querySelector(".install .close");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", function () {
+      document.body.classList.remove("show-install");
+      try { localStorage.setItem("cartellone:install-hint", "off"); } catch (e) {}
+    });
+  }
+
+  // Service worker: il cartellone resta consultabile anche senza rete.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
