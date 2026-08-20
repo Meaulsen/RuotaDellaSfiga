@@ -1,4 +1,4 @@
-/* Due "telefoni" separati (contesti distinti, memoria distinta) contro il finto
+/* Due dispositivi separati (contesti distinti, memoria distinta) contro il finto
    Firebase, per verificare che la sincronizzazione faccia quello che promette. */
 const { chromium, devices } = require('playwright');
 const SITO = 'http://127.0.0.1:8099/';
@@ -39,7 +39,7 @@ export function update(r, patch){
 `;
 const MOCK_CONFIG = `export const firebaseConfig = { apiKey:"finta", authDomain:"x", databaseURL:"http://finto", projectId:"prova" };`;
 
-async function telefono(browser, nome) {
+async function dispositivo(browser, nome) {
   const ctx = await browser.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
   const p = await ctx.newPage();
   p.on('pageerror', e => console.log('!! ' + nome + ' errore:', e.message));
@@ -61,7 +61,7 @@ const firme = (p, lavoro) => p.locator('.task', { has: p.locator('[data-add="'+l
 
 (async () => {
   const b = await chromium.launch();
-  const A = await telefono(b, 'A'), B = await telefono(b, 'B');
+  const A = await dispositivo(b, 'A'), B = await dispositivo(b, 'B');
   let ok = true;
   const verifica = (t, cond) => { console.log((cond ? '  ok  ' : '  NO  ') + t); if (!cond) ok = false; };
 

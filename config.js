@@ -1,5 +1,5 @@
 /* Configurazione di Firebase.
-   Finché è vuota l'app funziona lo stesso, ma solo su questo telefono.
+   Finché è vuota l'app funziona lo stesso, ma i dati restano nel browser che la apre.
    Per accendere la sincronizzazione: crea un progetto su
    https://console.firebase.google.com, aggiungi un'app Web e incolla qui i
    valori che ti dà (vedi il README, punto 5). Questi valori sono pubblici per

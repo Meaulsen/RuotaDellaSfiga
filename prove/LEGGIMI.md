@@ -17,7 +17,7 @@ funzionamento senza rete e migrazione dei dati salvati dalla versione precedente
 node locale.js
 ```
 
-## `due-telefoni-veri.js` — due telefoni sull'emulatore Firebase
+## `due-dispositivi-veri.js` — due dispositivi sull'emulatore Firebase
 
 La prova buona: usa l'SDK vero e l'emulatore ufficiale del Realtime Database,
 con le regole di `database.rules.json`. Serve Java.
@@ -30,14 +30,14 @@ java -jar ~/.cache/firebase/emulators/firebase-database-emulator-*.jar --host 12
 curl -X PUT -H "Authorization: Bearer owner" --data-binary @../database.rules.json \
   "http://127.0.0.1:9000/.settings/rules.json?ns=prova"
 
-node due-telefoni-veri.js
+node due-dispositivi-veri.js
 ```
 
 Verifica che le regole accettino quello che l'app scrive, che le modifiche
-passino da un telefono all'altro, e che una firma fatta senza rete sopravviva
+passino da un dispositivo all'altro, e che una firma fatta senza rete sopravviva
 alla chiusura dell'app e parta da sola quando la rete torna.
 
-## `due-telefoni.js` — la stessa cosa senza Java
+## `due-dispositivi.js` — la stessa cosa senza Java
 
 Ripiego per quando l'emulatore non è disponibile: sostituisce al volo `config.js`
 e i file di Firebase con delle finte controparti che parlano con
@@ -45,7 +45,7 @@ e i file di Firebase con delle finte controparti che parlano con
 
 ```bash
 node finto-firebase.js    # in un terminale a parte
-node due-telefoni.js
+node due-dispositivi.js
 ```
 
 ## Le regole, da sole

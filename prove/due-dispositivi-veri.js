@@ -1,4 +1,4 @@
-/* Come due-telefoni.js, ma contro l'emulatore vero di Firebase (jar ufficiale)
+/* Come due-dispositivi.js, ma contro l'emulatore vero di Firebase (jar ufficiale)
    con l'SDK vero: qui si prova anche il protocollo, la riconnessione e le regole. */
 const { chromium, devices } = require('playwright');
 const SITO = 'http://127.0.0.1:8099/';
@@ -6,7 +6,7 @@ const CONFIG = `export const firebaseConfig = {
   apiKey: "finta-per-l-emulatore", authDomain: "prova.firebaseapp.com",
   databaseURL: "http://127.0.0.1:9000?ns=prova", projectId: "prova" };`;
 
-async function telefono(b, nome) {
+async function dispositivo(b, nome) {
   const ctx = await b.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
   const p = await ctx.newPage();
   p.on('pageerror', e => console.log('!! ' + nome + ':', e.message));
@@ -28,7 +28,7 @@ const conta = (p, c) => p.evaluate((x) => document.querySelector('.person[data-p
 
 (async () => {
   const b = await chromium.launch();
-  const A = await telefono(b, 'A'), B = await telefono(b, 'B');
+  const A = await dispositivo(b, 'A'), B = await dispositivo(b, 'B');
   let ok = true;
   const v = (t, c) => { console.log((c ? '  ok  ' : '  NO  ') + t); if (!c) ok = false; };
 

@@ -1,5 +1,5 @@
 /* Cartellone dei lavori di casa.
-   I dati vivono in due posti: la memoria del telefono (così l'app parte
+   I dati vivono in due posti: la memoria del browser (così l'app parte
    subito e funziona senza rete) e, se la sincronizzazione è accesa, il ramo
    della vostra casa su Firebase. Ogni modifica viene scritta prima in locale
    e poi spedita: se la rete manca resta in coda e parte appena torna. */
@@ -92,7 +92,7 @@ function applica(oggetto, percorso, valore) {
 
 /* ── Lo stato ────────────────────────────────────────────────────────────── */
 const stato = {
-  attivo: "a",   // chi sta segnando: vale solo su questo telefono
+  attivo: "a",   // chi sta segnando: vale solo su questo dispositivo
   casa: null,    // codice della casa condivisa, se accesa
   coda: {},      // scritture non ancora spedite: percorso -> valore (null = cancella)
   dati: { nomi: { a: "", b: "" }, extra: {}, settimane: {} }
@@ -442,7 +442,7 @@ function spegni() {
 
 $("#crea").addEventListener("click", () => {
   stato.casa = codice(20);
-  // la casa nasce con quello che c'è già su questo telefono
+  // la casa nasce con quello che c'è già in questo browser
   stato.coda = {};
   Object.keys(stato.dati.nomi).forEach((p) => {
     if (stato.dati.nomi[p]) stato.coda["nomi/" + p] = stato.dati.nomi[p];
@@ -465,7 +465,7 @@ function entra(cod) {
   const pulito = String(cod || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
   if (pulito.length < 16) { if (cod !== null) avvisa("Codice non valido"); return; }
   if (pulito === stato.casa) return;
-  if (!window.confirm("Ti collego a questa casa. I dati di questo telefono verranno " +
+  if (!window.confirm("Ti collego a questa casa. I dati che hai qui verranno " +
                       "sostituiti da quelli della casa. Vado?")) return;
   spegni();
   stato.casa = pulito;
@@ -478,12 +478,12 @@ $("#copia").addEventListener("click", async () => {
   try {
     if (navigator.share) { await navigator.share({ title: "Chi ha tempo, fa", url: link }); return; }
     await navigator.clipboard.writeText(link);
-    avvisa("Link copiato: mandalo all'altro telefono");
-  } catch (e) { window.prompt("Copia questo link e mandalo all'altro telefono:", link); }
+    avvisa("Link copiato: aprilo sull'altro dispositivo");
+  } catch (e) { window.prompt("Copia questo link e aprilo sull'altro dispositivo:", link); }
 });
 
 $("#scollega").addEventListener("click", () => {
-  if (!window.confirm("Questo telefono smette di sincronizzarsi. I dati restano qui. Vado?")) return;
+  if (!window.confirm("Questo dispositivo smette di sincronizzarsi. I dati restano qui. Vado?")) return;
   spegni();
   stato.casa = null; stato.coda = {};
   salva(); disegnaSync();
@@ -493,11 +493,12 @@ $("#scollega").addEventListener("click", () => {
 /* ── Suggerimento "Aggiungi a Home" ──────────────────────────────────────── */
 const installata = window.matchMedia("(display-mode: standalone)").matches ||
                    window.navigator.standalone === true;
-const telefono = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
-                 window.matchMedia("(pointer: coarse)").matches;
+// "Aggiungi a Home" ha senso dove c'è una schermata Home: sul computer no
+const aTocco = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
+               window.matchMedia("(pointer: coarse)").matches;
 let nascosto = false;
 try { nascosto = localStorage.getItem("cartellone:install-hint") === "off"; } catch (e) {}
-if (!installata && !nascosto && telefono) document.body.classList.add("show-install");
+if (!installata && !nascosto && aTocco) document.body.classList.add("show-install");
 $(".install .close").addEventListener("click", () => {
   document.body.classList.remove("show-install");
   try { localStorage.setItem("cartellone:install-hint", "off"); } catch (e) {}
@@ -522,7 +523,7 @@ nube.prepara().then(() => {
   accendi();
 });
 
-// se il telefono è rimasto aperto oltre la mezzanotte di domenica, la
+// se l'app è rimasta aperta oltre la mezzanotte di domenica, la
 // settimana "corrente" va aggiornata
 setInterval(() => {
   const ora = lunedi(new Date());

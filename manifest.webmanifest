@@ -1,7 +1,7 @@
 {
   "name": "Cartellone lavori di casa",
   "short_name": "Cartellone",
-  "description": "I lavori di casa divisi in due: tocchi «fatto», l'app tiene il conto della settimana e dice chi offre il caffè.",
+  "description": "I lavori di casa divisi in due: segni «fatto», l'app tiene il conto della settimana e dice chi offre il caffè.",
   "lang": "it",
   "dir": "ltr",
   "start_url": "./",

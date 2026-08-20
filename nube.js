@@ -25,7 +25,7 @@ export function configurata() {
 }
 
 /* Apre il collegamento a una casa.
-   onDati(oggetto)   → arriva ogni volta che qualcosa cambia, da qui o dall'altro telefono
+   onDati(oggetto)   → arriva ogni volta che qualcosa cambia, da qui o da un altro dispositivo
    onStato(booleano) → true quando siamo davvero collegati
    Restituisce { spedisci(scritture), chiudi() }. */
 export async function collega(casa, { onDati, onStato }) {
