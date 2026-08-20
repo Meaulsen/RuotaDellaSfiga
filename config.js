@@ -10,4 +10,8 @@ export const firebaseConfig = {
   authDomain: "",
   databaseURL: "",
   projectId: ""
+  apiKey: "AIzaSyAVm3I9zYJzYFueCyLNhbf3emfzPPrTAUo",
+  authDomain: "ruotadellasfiga.firebaseapp.com",
+  databaseURL: "https://ruotadellasfiga-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ruotadellasfiga"
 };
