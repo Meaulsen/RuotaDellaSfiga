@@ -6,10 +6,6 @@
    loro natura: a proteggere i dati sono le regole del database. */
 
 export const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  databaseURL: "",
-  projectId: ""
   apiKey: "AIzaSyAVm3I9zYJzYFueCyLNhbf3emfzPPrTAUo",
   authDomain: "ruotadellasfiga.firebaseapp.com",
   databaseURL: "https://ruotadellasfiga-default-rtdb.europe-west1.firebasedatabase.app",
