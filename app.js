@@ -286,10 +286,12 @@ function disegnaBilancio() {
     " · il caffè lo offre <b>" + esc(nome(d > 0 ? "b" : "a")) + "</b> ☕";
 }
 
-/* il nome della casa, in testata: c'è solo se la casa condivisa è accesa */
+/* il nome della casa, in testata: c'è solo se la casa condivisa è accesa.
+   Le case create prima che i nomi esistessero non ne hanno uno: lì vale
+   la stessa scritta di ripiego della scheda in fondo. */
 function disegnaCasa() {
   const riga = $("#casa-top");
-  const n = (stato.dati.nome || "").trim();
+  const n = stato.casa ? ((stato.dati.nome || "").trim() || "La vostra casa") : "";
   riga.textContent = n;
   riga.hidden = !n;
 }
