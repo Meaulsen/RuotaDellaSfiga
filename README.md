@@ -84,8 +84,9 @@ tutti i dispositivi. Fatto questo, **Manda il link all'altro dispositivo**: chi 
 riceve lo apre e conferma, e da quel momento vedete gli stessi dati. In alternativa,
 **«Ho già un codice»** e si incolla il codice della casa.
 
-Il nome della casa serve a capire al volo dove si è finiti — comodo se un domani
-create una seconda casa, o se qualcuno si collega al posto sbagliato.
+Il nome della casa compare in alto, sopra al titolo, e serve a capire al volo dove
+si è finiti — comodo se un domani create una seconda casa, o se qualcuno si collega
+al posto sbagliato.
 
 Cosa aspettarsi:
 - Le modifiche compaiono sugli altri dispositivi in un attimo, senza ricaricare niente.
