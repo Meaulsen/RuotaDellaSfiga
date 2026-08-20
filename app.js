@@ -286,6 +286,14 @@ function disegnaBilancio() {
     " · il caffè lo offre <b>" + esc(nome(d > 0 ? "b" : "a")) + "</b> ☕";
 }
 
+/* il nome della casa, in testata: c'è solo se la casa condivisa è accesa */
+function disegnaCasa() {
+  const riga = $("#casa-top");
+  const n = (stato.dati.nome || "").trim();
+  riga.textContent = n;
+  riga.hidden = !n;
+}
+
 function disegnaSync() {
   const card = $("#sync");
   if (!nube.configurata() && !stato.casa) { card.hidden = true; return; }
@@ -303,7 +311,7 @@ function disegnaSync() {
   }
 }
 
-function disegna() { disegnaSettimana(); disegnaLavori(); disegnaBilancio(); disegnaSync(); }
+function disegna() { disegnaCasa(); disegnaSettimana(); disegnaLavori(); disegnaBilancio(); disegnaSync(); }
 
 /* ── Avviso in fondo, con "Annulla" ──────────────────────────────────────── */
 const toast = $("#toast"), toastMsg = $("#toast-msg"), toastUndo = $("#toast-undo");

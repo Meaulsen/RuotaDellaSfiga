@@ -57,22 +57,28 @@
     color:var(--accent-deep);margin:0;text-align:center;}
   h1{font-family:"Fraunces";font-weight:900;font-size:23px;line-height:1;margin:0;
     letter-spacing:-.01em;}
+  /* Nome della casa, sopra al titolo */
+  .casa-top{font-weight:700;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent-deep);margin:0 0 5px;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .casa-top[hidden]{display:none;}
   .h1-swash{display:inline-block;position:relative;isolation:isolate;}
   .h1-swash::after{content:"";position:absolute;left:-1px;right:-1px;bottom:1px;height:6px;
     background:var(--accent);opacity:.35;border-radius:4px;z-index:-1;}
 
-  .weeknav{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .weeknav{display:flex;align-items:center;gap:8px;margin-top:10px;}
   .weeknav button[hidden]{display:none;}
-  .weeknav button{width:32px;height:32px;flex:none;border:1.5px solid rgba(34,58,46,.18);
-    background:var(--card);border-radius:10px;font-size:17px;line-height:1;
+  .weeknav button{width:38px;height:38px;flex:none;border:1.5px solid rgba(34,58,46,.18);
+    background:var(--card);border-radius:11px;font-size:21px;line-height:1;
     display:flex;align-items:center;justify-content:center;}
   .weeknav button:active{transform:scale(.94);}
   .weeknav button[disabled]{opacity:.3;pointer-events:none;}
-  .weekwhen{flex:1;text-align:center;line-height:1.15;}
-  .weekwhen b{font-family:"Fraunces";font-weight:600;font-size:15.5px;display:block;}
-  .weekwhen span{font-size:10.5px;color:var(--ink-soft);letter-spacing:.02em;}
-  .today{border:none;background:var(--ink);color:#fff;font-size:11px;font-weight:600;
-    padding:5px 11px;border-radius:999px;width:auto !important;height:auto !important;}
+  .weekwhen{flex:1;min-width:0;text-align:center;line-height:1.15;}
+  .weekwhen b{font-family:"Fraunces";font-weight:700;font-size:22px;display:block;
+    letter-spacing:-.01em;}
+  .weekwhen span{font-size:12.5px;color:var(--ink-soft);letter-spacing:.02em;}
+  .weeknav button.today{border:none;background:var(--ink);color:#fff;font-size:12px;
+    font-weight:600;padding:6px 12px;border-radius:999px;width:auto;height:auto;}
 
   /* ── Schede ──────────────────────────────────────────────────── */
   .card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);
@@ -221,8 +227,20 @@
   .toast button{border:none;background:rgba(255,255,255,.14);color:#fff;font-weight:600;
     font-size:13px;padding:6px 13px;border-radius:999px;white-space:nowrap;}
 
+  /* schermi stretti: la settimana resta grossa ma la riga non si spezza male */
+  @media (max-width:379px){
+    .weeknav{gap:6px;}
+    .weeknav button{width:34px;height:34px;font-size:19px;}
+    .weekwhen b{font-size:19px;}
+    .weekwhen span{font-size:11.5px;}
+    .weeknav button.today{font-size:11px;padding:5px 10px;}
+  }
+
   @media (min-width:520px){
     h1{font-size:30px;}
+    .casa-top{font-size:11px;}
+    .weekwhen b{font-size:26px;}
+    .weekwhen span{font-size:13px;}
     .t-name{font-size:14.5px;}
   }
 
@@ -238,6 +256,7 @@
 
 <header class="appbar">
   <div class="wrap">
+    <p class="casa-top" id="casa-top" hidden></p>
     <h1>Chi ha <span class="h1-swash">tempo</span>, fa</h1>
     <div class="weeknav">
       <button id="prev" type="button" aria-label="Settimana precedente">&lsaquo;</button>
