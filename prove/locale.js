@@ -6,6 +6,10 @@ const SITO = 'http://127.0.0.1:8099/';
   let ok = true;
   const v = (t, c) => { console.log((c ? '  ok  ' : '  NO  ') + t); if (!c) ok = false; };
   const ctx = await b.newContext({ ...devices['iPhone 13'] });
+  // config.js nel repository ora è pieno: qui vogliamo provare il caso opposto,
+  // cioè l'app senza sincronizzazione, quindi lo sostituiamo con uno vuoto
+  const CONFIG_VUOTO = 'export const firebaseConfig = { apiKey: "", authDomain: "", databaseURL: "", projectId: "" };';
+  await ctx.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: CONFIG_VUOTO }));
   const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', e => errs.push(e.message));
@@ -66,6 +70,7 @@ const SITO = 'http://127.0.0.1:8099/';
 
   // migrazione dalla versione precedente
   const ctx2 = await b.newContext({ ...devices['iPhone 13'] });
+  await ctx2.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: CONFIG_VUOTO }));
   const p2 = await ctx2.newPage();
   p2.on('pageerror', e => errs.push('migrazione: ' + e.message));
   await p2.goto(SITO, { waitUntil: 'load' });
