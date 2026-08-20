@@ -1,0 +1,40 @@
+{
+  "rules": {
+    "case": {
+      "$casa": {
+        ".read": "$casa.length >= 16 && $casa.length <= 40",
+        ".write": "$casa.length >= 16 && $casa.length <= 40",
+
+        "nomi": {
+          "$chi": { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "$altro": { ".validate": "$chi == 'a' || $chi == 'b'" }
+        },
+
+        "extra": {
+          "$lavoro": {
+            "nome": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 80" },
+            "obiettivo": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 7" },
+            "$altro": { ".validate": false }
+          }
+        },
+
+        "settimane": {
+          "$settimana": {
+            "nota": { ".validate": "newData.isString() && newData.val().length <= 2000" },
+            "firme": {
+              "$firma": {
+                "l": { ".validate": "newData.isString() && newData.val().length <= 60" },
+                "c": { ".validate": "newData.val() == 'a' || newData.val() == 'b'" },
+                "t": { ".validate": "newData.isNumber()" },
+                "$altro": { ".validate": false }
+              }
+            },
+            "$altro": { ".validate": false }
+          }
+        },
+
+        "$altro": { ".validate": false }
+      }
+    }
+  }
+}

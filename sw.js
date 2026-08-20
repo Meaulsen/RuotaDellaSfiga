@@ -2,12 +2,15 @@
    Tiene una copia locale del foglio: una volta aperto, l'app funziona
    anche senza rete. Cambia VERSION per forzare l'aggiornamento. */
 
-const VERSION = "v2";
+const VERSION = "v3";
 const CACHE = `cartellone-${VERSION}`;
 
 const ASSETS = [
   "./",
   "./index.html",
+  "./app.js",
+  "./nube.js",
+  "./config.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
   "./icons/icon-180.png",

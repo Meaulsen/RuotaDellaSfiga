@@ -169,6 +169,22 @@
   .reset{display:block;margin:0 auto;border:1.5px solid var(--line);background:transparent;
     color:var(--ink-soft);font-size:12.5px;padding:9px 16px;border-radius:999px;}
 
+  /* ── Casa condivisa ─────────────────────────────────────────── */
+  .sync-t{font-size:12.5px;line-height:1.5;color:var(--ink-soft);margin:0 0 11px;
+    display:flex;align-items:center;gap:7px;}
+  .dot{width:9px;height:9px;border-radius:50%;background:#C0392B;flex:none;}
+  .dot[data-stato="on"]{background:#4E8C5A;}
+  .codice{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+    letter-spacing:.06em;word-break:break-all;background:var(--paper);
+    border:1.5px dashed var(--line);border-radius:10px;padding:9px 11px;margin-bottom:11px;
+    -webkit-user-select:all;user-select:all;}
+  .sync-btns{display:flex;flex-wrap:wrap;gap:8px;}
+  .btn-p,.btn-s{flex:1 1 auto;border-radius:10px;padding:11px 14px;font-size:14px;
+    font-weight:600;border:1.5px solid transparent;}
+  .btn-p{background:var(--ink);color:#fff;}
+  .btn-s{background:transparent;border-color:var(--line);color:var(--ink-soft);}
+  .btn-p:active,.btn-s:active{transform:scale(.98);}
+
   /* ── Suggerimento "Aggiungi a Home" ─────────────────────────── */
   .install{display:none;gap:10px;align-items:flex-start;background:var(--ink);color:#F3F1E8;
     border-radius:14px;padding:12px 14px;margin-top:14px;font-size:13px;line-height:1.45;}
@@ -273,6 +289,26 @@
               aria-label="Note della settimana"></textarea>
   </section>
 
+  <section class="card sync" id="sync" hidden>
+    <p class="lbl">Fra due telefoni</p>
+    <div id="sync-off">
+      <p class="sync-t">Per ora firme e lavori restano su questo telefono. Attiva la casa
+        condivisa e li vedrete tutti e due, ognuno dal suo.</p>
+      <div class="sync-btns">
+        <button id="crea" class="btn-p" type="button">Attiva la casa condivisa</button>
+        <button id="entra" class="btn-s" type="button">Ho già un codice</button>
+      </div>
+    </div>
+    <div id="sync-on" hidden>
+      <p class="sync-t"><span class="dot" id="dot"></span><span id="stato-testo"></span></p>
+      <div class="codice" id="codice"></div>
+      <div class="sync-btns">
+        <button id="copia" class="btn-p" type="button">Manda il link all'altro telefono</button>
+        <button id="scollega" class="btn-s" type="button">Scollega</button>
+      </div>
+    </div>
+  </section>
+
   <p class="eyebrow" style="margin-top:22px">Casa nostra · turni condivisi</p>
   <p class="motto">La casa si tiene in due · chi ne ha fatti meno, offre il caffè ☕</p>
   <button class="reset" id="reset" type="button">Azzera questa settimana</button>
@@ -284,359 +320,7 @@
   <button id="toast-undo" type="button">Annulla</button>
 </div>
 
-<script>
-(function () {
-  "use strict";
-
-  /* ─────────────────────────────────────────────────────────────
-     I lavori. "obiettivo" è quante volte andrebbe fatto in una
-     settimana: è la vecchia colonna "ogni quanto", che qui serve
-     a mostrare a che punto siete.
-     ───────────────────────────────────────────────────────────── */
-  var GRUPPI = [
-    { nome: "Cucina & pasti", tinta: "", lavori: [
-      ["piatti",       "Lavare i piatti / caricare la lavastoviglie", 7],
-      ["svuotare",     "Svuotare la lavastoviglie",                   7],
-      ["fornelli",     "Pulire piano e fornelli",                     3],
-      ["cena",         "Cucinare la cena",                            7],
-      ["tavola",       "Apparecchiare / sparecchiare",                7]
-    ]},
-    { nome: "Pulizie di casa", tinta: "b", lavori: [
-      ["aspirapolvere","Passare l'aspirapolvere",                     2],
-      ["pavimenti",    "Lavare i pavimenti",                          1],
-      ["spolverare",   "Spolverare",                                  1],
-      ["bagno",        "Pulire il bagno",                             1]
-    ]},
-    { nome: "Bucato", tinta: "", lavori: [
-      ["lavatrice",    "Fare la lavatrice",                           3],
-      ["stendere",     "Stendere il bucato",                          3],
-      ["piegare",      "Piegare, riporre e stirare",                  2]
-    ]},
-    { nome: "Fuori & varie", tinta: "b", lavori: [
-      ["spesa",        "Fare la spesa",                               2],
-      ["rifiuti",      "Rifiuti e differenziata",                     7],
-      ["piante",       "Innaffiare le piante",                        2],
-      ["lenzuola",     "Cambio lenzuola / asciugamani",               1]
-    ]}
-  ];
-
-  var QUANDO = { 7: "ogni giorno", 3: "2–3 volte a settimana",
-                 2: "2 volte a settimana", 1: "1 volta a settimana" };
-  var MESI = ["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio",
-              "agosto","settembre","ottobre","novembre","dicembre"];
-  var MESI_BREVI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
-  var CHIAVE = "cartellone:v1";
-
-  /* ── Settimane (da lunedì a domenica) ───────────────────────── */
-  function lunedi(d) {
-    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
-    return x;
-  }
-  function idSettimana(d) {
-    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) +
-           "-" + ("0" + d.getDate()).slice(-2);
-  }
-  function piuGiorni(d, n) {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-  }
-  function etichettaSettimana(lun) {
-    var dom = piuGiorni(lun, 6);
-    if (lun.getMonth() === dom.getMonth()) {
-      return lun.getDate() + " – " + dom.getDate() + " " + MESI[dom.getMonth()];
-    }
-    return lun.getDate() + " " + MESI_BREVI[lun.getMonth()] + " – " +
-           dom.getDate() + " " + MESI_BREVI[dom.getMonth()];
-  }
-
-  /* ── Memoria (resta nel telefono) ───────────────────────────── */
-  var stato = { nomi: { a: "", b: "" }, attivo: "a", extra: [], settimane: {} };
-  try {
-    var salvato = JSON.parse(localStorage.getItem(CHIAVE) || "null");
-    if (salvato && typeof salvato === "object") {
-      stato.nomi = salvato.nomi || stato.nomi;
-      stato.attivo = salvato.attivo === "b" ? "b" : "a";
-      stato.extra = Array.isArray(salvato.extra) ? salvato.extra : [];
-      stato.settimane = salvato.settimane || {};
-    }
-  } catch (e) {}
-
-  function salva() {
-    // via le settimane e i lavori senza firme, così la memoria non si gonfia
-    Object.keys(stato.settimane).forEach(function (k) {
-      var s = stato.settimane[k];
-      Object.keys(s.firme || {}).forEach(function (id) {
-        if (!s.firme[id].length) delete s.firme[id];
-      });
-      if (!s.nota && !Object.keys(s.firme || {}).length) delete stato.settimane[k];
-    });
-    try { localStorage.setItem(CHIAVE, JSON.stringify(stato)); } catch (e) {}
-  }
-
-  function esc(t) {
-    return String(t).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
-
-  var lunCorrente = lunedi(new Date());
-  var lunVisto = lunCorrente;
-
-  function scheda(k) {
-    var s = stato.settimane[k];
-    if (!s) { s = stato.settimane[k] = { firme: {}, nota: "" }; }
-    if (!s.firme) s.firme = {};
-    if (typeof s.nota !== "string") s.nota = "";
-    return s;
-  }
-  function settimana() { return scheda(idSettimana(lunVisto)); }
-  function firmeDi(k, id) {
-    var s = scheda(k);
-    if (!Array.isArray(s.firme[id])) s.firme[id] = [];
-    return s.firme[id];
-  }
-  function firme(id) { return firmeDi(idSettimana(lunVisto), id); }
-
-  /* ── Nomi e iniziali ────────────────────────────────────────── */
-  function nome(p) {
-    var n = (stato.nomi[p] || "").trim();
-    return n || (p === "a" ? "Persona 1" : "Persona 2");
-  }
-  function iniziale(p) {
-    var n = (stato.nomi[p] || "").trim();
-    return n ? n[0].toUpperCase() : (p === "a" ? "1" : "2");
-  }
-
-  /* ── Elenco completo dei lavori, gruppi + quelli aggiunti ───── */
-  function elenco() {
-    var gruppi = GRUPPI.map(function (g) {
-      return { nome: g.nome, tinta: g.tinta, lavori: g.lavori.map(function (l) {
-        return { id: l[0], nome: l[1], obiettivo: l[2], mio: false };
-      })};
-    });
-    if (stato.extra.length) {
-      gruppi.push({ nome: "I vostri lavori", tinta: "", lavori: stato.extra.map(function (l) {
-        return { id: l.id, nome: l.nome, obiettivo: l.obiettivo, mio: true };
-      })});
-    }
-    return gruppi;
-  }
-
-  /* ── Disegno della pagina ───────────────────────────────────── */
-  var lista = document.getElementById("lista");
-  var verdetto = document.getElementById("verdict");
-
-  function disegnaSettimana() {
-    document.getElementById("wlabel").textContent = etichettaSettimana(lunVisto);
-    var diff = Math.round((lunVisto - lunCorrente) / 604800000);
-    document.getElementById("wsub").textContent =
-      diff === 0 ? "questa settimana" :
-      diff === -1 ? "settimana scorsa" :
-      diff === 1 ? "settimana prossima" :
-      diff < 0 ? Math.abs(diff) + " settimane fa" : "fra " + diff + " settimane";
-    document.getElementById("today").hidden = diff === 0;
-    document.getElementById("note").value = settimana().nota;
-  }
-
-  function disegnaLavori() {
-    // il tasto per firmare porta l'iniziale di chi sta segnando (o un "+", se il nome manca)
-    var segno = (stato.nomi[stato.attivo] || "").trim() ? iniziale(stato.attivo) : "+";
-    var pezzi = elenco().map(function (g) {
-      var righe = g.lavori.map(function (l) {
-        var f = firme(l.id);
-        var fatto = f.length >= l.obiettivo;
-        var sigle = f.map(function (p, i) {
-          return '<button class="sig' + (p === "b" ? " b" : "") + '" type="button" data-id="' +
-                 l.id + '" data-i="' + i + '" aria-label="Togli la firma di ' + esc(nome(p)) + '">' +
-                 "<span>" + iniziale(p) + "</span></button>";
-        }).join("");
-        return '<div class="task' + (fatto ? " done" : "") + '">' +
-                 '<div class="t-main">' +
-                   '<div class="t-name">' + esc(l.nome) + "</div>" +
-                   '<div class="t-meta">' + (fatto ? "✓ " : "") + "<b>" + f.length + "</b> di " +
-                     l.obiettivo + " · " + QUANDO[l.obiettivo] + "</div>" +
-                 "</div>" +
-                 '<div class="slots">' + sigle +
-                   '<button class="addsig ' + stato.attivo + '" type="button" data-add="' + l.id +
-                     '" aria-label="Segna che l\'ha fatto ' + esc(nome(stato.attivo)) + '">' +
-                     segno + "</button>" +
-                 "</div>" +
-                 (l.mio ? '<button class="del" type="button" data-del="' + l.id +
-                          '" aria-label="Togli questo lavoro">&times;</button>' : "") +
-               "</div>";
-      }).join("");
-      return '<section class="group"><span class="group-tag ' + g.tinta + '">' + g.nome +
-             '</span><div class="card">' + righe + "</div></section>";
-    });
-    lista.innerHTML = pezzi.join("");
-  }
-
-  function disegnaBilancio() {
-    var conta = { a: 0, b: 0 };
-    var s = settimana();
-    Object.keys(s.firme).forEach(function (id) {
-      s.firme[id].forEach(function (p) { if (conta[p] !== undefined) conta[p]++; });
-    });
-
-    ["a", "b"].forEach(function (p) {
-      var card = document.querySelector('.person[data-p="' + p + '"]');
-      card.dataset.on = stato.attivo === p ? "1" : "0";
-      card.querySelector(".pick").setAttribute("aria-pressed", stato.attivo === p ? "true" : "false");
-      card.querySelector(".badge").textContent = iniziale(p);
-      card.querySelector(".n").textContent = conta[p];
-      card.querySelector(".pcount small").textContent = conta[p] === 1 ? "firma" : "firme";
-    });
-
-    var d = conta.a - conta.b;
-    if (!conta.a && !conta.b) {
-      verdetto.innerHTML = "Settimana ancora tutta da fare.";
-    } else if (d === 0) {
-      verdetto.innerHTML = "Pari e patta: <b>" + conta.a + "</b> a testa. Bravi.";
-    } else {
-      var avanti = d > 0 ? "a" : "b", dietro = d > 0 ? "b" : "a";
-      verdetto.innerHTML = "<b>" + nome(avanti) + "</b> è avanti di " + Math.abs(d) +
-        " · il caffè lo offre <b>" + nome(dietro) + "</b> ☕";
-    }
-  }
-
-  function disegna() {
-    disegnaSettimana();
-    disegnaLavori();
-    disegnaBilancio();
-  }
-
-  /* ── Avviso in fondo, con "Annulla" ─────────────────────────── */
-  var toast = document.getElementById("toast");
-  var toastMsg = document.getElementById("toast-msg");
-  var toastUndo = document.getElementById("toast-undo");
-  var annulla = null, timerToast;
-
-  function avvisa(testo, ripristina) {
-    toastMsg.textContent = testo;
-    annulla = ripristina || null;
-    toastUndo.hidden = !annulla;
-    toast.classList.add("on");
-    clearTimeout(timerToast);
-    timerToast = setTimeout(chiudiToast, 5000);
-  }
-  function chiudiToast() { toast.classList.remove("on"); annulla = null; }
-  toastUndo.addEventListener("click", function () {
-    if (annulla) { annulla(); salva(); disegna(); }
-    chiudiToast();
-  });
-
-  /* ── Tocchi sull'elenco ─────────────────────────────────────── */
-  lista.addEventListener("click", function (ev) {
-    var add = ev.target.closest("[data-add]");
-    if (add) {
-      firme(add.dataset.add).push(stato.attivo);
-      salva(); disegnaLavori(); disegnaBilancio();
-      return;
-    }
-
-    var sig = ev.target.closest(".sig");
-    if (sig) {
-      var k = idSettimana(lunVisto), tid = sig.dataset.id, i = +sig.dataset.i;
-      var chi = firmeDi(k, tid).splice(i, 1)[0];
-      salva(); disegnaLavori(); disegnaBilancio();
-      avvisa("Firma tolta", function () { firmeDi(k, tid).splice(i, 0, chi); });
-      return;
-    }
-
-    var del = ev.target.closest("[data-del]");
-    if (del) {
-      var id = del.dataset.del;
-      var pos = stato.extra.findIndex(function (l) { return l.id === id; });
-      if (pos < 0) return;
-      var tolto = stato.extra.splice(pos, 1)[0];
-      salva(); disegnaLavori(); disegnaBilancio();
-      avvisa("«" + tolto.nome + "» tolto", function () { stato.extra.splice(pos, 0, tolto); });
-    }
-  });
-
-  /* ── Chi sta segnando, e i nomi ─────────────────────────────── */
-  document.querySelectorAll(".person").forEach(function (card) {
-    var p = card.dataset.p;
-    var input = card.querySelector(".pname");
-    input.value = stato.nomi[p] || "";
-    card.addEventListener("click", function (ev) {
-      if (ev.target === input) return;
-      stato.attivo = p; salva(); disegnaLavori(); disegnaBilancio();
-    });
-    input.addEventListener("input", function () {
-      stato.nomi[p] = input.value;
-      salva(); disegnaLavori(); disegnaBilancio();
-    });
-  });
-
-  /* ── Settimana avanti e indietro ────────────────────────────── */
-  document.getElementById("prev").addEventListener("click", function () {
-    lunVisto = piuGiorni(lunVisto, -7); disegna();
-  });
-  document.getElementById("next").addEventListener("click", function () {
-    lunVisto = piuGiorni(lunVisto, 7); disegna();
-  });
-  document.getElementById("today").addEventListener("click", function () {
-    lunVisto = lunCorrente; disegna();
-  });
-
-  /* ── Note della settimana ───────────────────────────────────── */
-  var nota = document.getElementById("note");
-  nota.addEventListener("input", function () { settimana().nota = nota.value; salva(); });
-
-  /* ── Aggiungere un lavoro vostro ────────────────────────────── */
-  document.getElementById("addform").addEventListener("submit", function (ev) {
-    ev.preventDefault();
-    var campo = document.getElementById("newname");
-    var testo = campo.value.trim();
-    if (!testo) { campo.focus(); return; }
-    stato.extra.push({
-      id: "mio-" + Date.now().toString(36),
-      nome: testo,
-      obiettivo: +document.getElementById("newfreq").value
-    });
-    campo.value = "";
-    campo.blur();
-    salva(); disegnaLavori();
-    avvisa("«" + testo + "» aggiunto");
-  });
-
-  /* ── Azzerare la settimana ──────────────────────────────────── */
-  document.getElementById("reset").addEventListener("click", function () {
-    var k = idSettimana(lunVisto);
-    var prima = stato.settimane[k];
-    if (!prima || !Object.keys(prima.firme).length) {
-      avvisa("Questa settimana è già vuota");
-      return;
-    }
-    stato.settimane[k] = { firme: {}, nota: prima.nota };
-    salva(); disegna();
-    avvisa("Settimana azzerata", function () { stato.settimane[k] = prima; });
-  });
-
-  /* ── Suggerimento "Aggiungi a Home" ─────────────────────────── */
-  var installata = window.matchMedia("(display-mode: standalone)").matches ||
-                   window.navigator.standalone === true;
-  var telefono = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
-                 window.matchMedia("(pointer: coarse)").matches;
-  var nascosto = false;
-  try { nascosto = localStorage.getItem("cartellone:install-hint") === "off"; } catch (e) {}
-  if (!installata && !nascosto && telefono) document.body.classList.add("show-install");
-  document.querySelector(".install .close").addEventListener("click", function () {
-    document.body.classList.remove("show-install");
-    try { localStorage.setItem("cartellone:install-hint", "off"); } catch (e) {}
-  });
-
-  /* ── Copia locale, per funzionare anche senza rete ──────────── */
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("sw.js").catch(function () {});
-    });
-  }
-
-  disegna();
-})();
-</script>
+<script type="module" src="app.js"></script>
 
 </body>
 </html>
