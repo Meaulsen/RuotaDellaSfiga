@@ -55,13 +55,15 @@
   .appbar .wrap{padding-top:9px;padding-bottom:9px;}
   .eyebrow{font-weight:600;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;
     color:var(--accent-deep);margin:0;text-align:center;}
-  h1{font-family:"Fraunces";font-weight:900;font-size:23px;line-height:1;margin:0;
-    letter-spacing:-.01em;}
-  /* Nome della casa, sopra al titolo */
-  .casa-top{font-weight:700;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
-    color:var(--accent-deep);margin:0 0 5px;line-height:1.2;
+  /* Nome della casa (o titolo) grande, con il motto piccolo di fianco */
+  .brand{display:flex;align-items:baseline;gap:9px;min-width:0;}
+  h1{font-family:"Fraunces";font-weight:900;font-size:23px;line-height:1.15;margin:0;
+    letter-spacing:-.01em;min-width:0;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .casa-top[hidden]{display:none;}
+  .motto-top{flex:none;font-weight:700;font-size:10px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--accent-deep);margin:0;line-height:1.2;
+    white-space:nowrap;}
+  .motto-top[hidden]{display:none;}
   .h1-swash{display:inline-block;position:relative;isolation:isolate;}
   .h1-swash::after{content:"";position:absolute;left:-1px;right:-1px;bottom:1px;height:6px;
     background:var(--accent);opacity:.35;border-radius:4px;z-index:-1;}
@@ -238,7 +240,7 @@
 
   @media (min-width:520px){
     h1{font-size:30px;}
-    .casa-top{font-size:11px;}
+    .motto-top{font-size:11px;}
     .weekwhen b{font-size:26px;}
     .weekwhen span{font-size:13px;}
     .t-name{font-size:14.5px;}
@@ -256,8 +258,10 @@
 
 <header class="appbar">
   <div class="wrap">
-    <p class="casa-top" id="casa-top" hidden></p>
-    <h1>Chi ha <span class="h1-swash">tempo</span>, fa</h1>
+    <div class="brand">
+      <h1 id="titolo">Chi ha <span class="h1-swash">tempo</span>, fa</h1>
+      <p class="motto-top" id="motto-top" hidden>Chi ha tempo, fa</p>
+    </div>
     <div class="weeknav">
       <button id="prev" type="button" aria-label="Settimana precedente">&lsaquo;</button>
       <div class="weekwhen"><b id="wlabel"></b><span id="wsub"></span></div>

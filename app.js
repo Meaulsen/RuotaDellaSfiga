@@ -286,14 +286,26 @@ function disegnaBilancio() {
     " · il caffè lo offre <b>" + esc(nome(d > 0 ? "b" : "a")) + "</b> ☕";
 }
 
-/* il nome della casa, in testata: c'è solo se la casa condivisa è accesa.
-   Le case create prima che i nomi esistessero non ne hanno uno: lì vale
-   la stessa scritta di ripiego della scheda in fondo. */
+/* la testata: se la casa condivisa è accesa il titolo grande diventa il nome
+   della casa («Casa» + nome) e il motto scivola piccolo lì di fianco; senza
+   casa resta il motto in grande, come prima.
+   Le case create prima che i nomi esistessero non ne hanno uno: lì vale il
+   ripiego «Casa nostra». */
 function disegnaCasa() {
-  const riga = $("#casa-top");
-  const n = stato.casa ? ((stato.dati.nome || "").trim() || "La vostra casa") : "";
-  riga.textContent = n;
-  riga.hidden = !n;
+  const titolo = $("#titolo"), motto = $("#motto-top");
+  const n = stato.casa ? (stato.dati.nome || "").trim() : "";
+  if (stato.casa) {
+    // se il nome comincia già con «Casa» non la ripetiamo
+    const etichetta = n.replace(/^casa\s+/i, "").trim() || "nostra";
+    // niente sottolineatura sul nome: se è lungo viene tagliato, e la riga
+    // colorata resterebbe appesa dopo i puntini
+    titolo.textContent = "Casa " + etichetta;
+    titolo.title = "Casa " + etichetta;
+  } else {
+    titolo.innerHTML = 'Chi ha <span class="h1-swash">tempo</span>, fa';
+    titolo.removeAttribute("title");
+  }
+  motto.hidden = !stato.casa;
 }
 
 function disegnaSync() {
