@@ -75,6 +75,11 @@ const firme = (p, lavoro) => p.locator('.task', { has: p.locator('[data-add="'+l
 
   // ── A: attiva la casa condivisa
   await A.p.click('#crea');
+  await A.p.click('#nuova button[type="submit"]');   // modulo vuoto: non deve creare niente
+  await A.p.fill('#casa-nome', 'Casa di prova');
+  await A.p.fill('#gestore-a', 'Ludo');
+  await A.p.fill('#gestore-b', 'Sara');
+  await A.p.click('#nuova button[type="submit"]');
   await finoA(async () => (await A.p.textContent('#codice')).length >= 20);
   const casa = (await A.p.textContent('#codice')).trim();
   console.log('  codice casa:', casa);

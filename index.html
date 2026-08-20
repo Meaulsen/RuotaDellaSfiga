@@ -101,6 +101,7 @@
     padding:3px 0;border-radius:0;}
   .pname:focus{outline:none;border-bottom-color:currentColor;border-bottom-style:solid;}
   .pname::placeholder{font-weight:500;color:#A8A79C;}
+  .pname[readonly]{border-bottom-color:transparent;cursor:default;}
   .ptag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);
     font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
     background:var(--c);color:#fff;padding:2px 8px;border-radius:999px;white-space:nowrap;}
@@ -178,6 +179,18 @@
     letter-spacing:.06em;word-break:break-all;background:var(--paper);
     border:1.5px dashed var(--line);border-radius:10px;padding:9px 11px;margin-bottom:11px;
     -webkit-user-select:all;user-select:all;}
+  .casa-titolo{font-family:"Fraunces";font-weight:600;font-size:18px;margin:0 0 8px;}
+  .nuova{display:block;}
+  .nuova[hidden],.sync-btns[hidden]{display:none;}
+  .campo{margin-bottom:10px;}
+  .campo .cap{display:block;font-size:11px;font-weight:600;color:var(--ink-soft);
+    margin-bottom:5px;letter-spacing:.02em;}
+  .campo input{width:100%;font-size:16px;font-family:inherit;color:var(--ink);
+    background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .campo input:focus{outline:none;border-color:var(--accent);}
+  .due{display:flex;gap:8px;}
+  .due input{min-width:0;}
+  .nota{font-size:11.5px;line-height:1.45;color:var(--ink-soft);margin:0 0 11px;font-style:italic;}
   .sync-btns{display:flex;flex-wrap:wrap;gap:8px;}
   .btn-p,.btn-s{flex:1 1 auto;border-radius:10px;padding:11px 14px;font-size:14px;
     font-weight:600;border:1.5px solid transparent;}
@@ -196,13 +209,15 @@
     padding:0 2px;opacity:.75;}
 
   /* ── Avviso in fondo allo schermo, con "Annulla" ────────────── */
-  .toast{position:fixed;left:50%;transform:translateX(-50%) translateY(120%);
+  .toast{position:fixed;left:50%;pointer-events:none;
+    /* fuori schermo per davvero: 120% della propria altezza non bastava */
+    transform:translateX(-50%) translateY(calc(100% + 32px));
     bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;
     display:flex;align-items:center;gap:14px;max-width:calc(100% - 28px);
     background:var(--ink);color:#F3F1E8;border-radius:999px;padding:11px 12px 11px 18px;
     font-size:13.5px;box-shadow:0 8px 26px rgba(34,58,46,.28);
     transition:transform .22s cubic-bezier(.2,.9,.3,1.2);}
-  .toast.on{transform:translateX(-50%) translateY(0);}
+  .toast.on{transform:translateX(-50%) translateY(0);pointer-events:auto;}
   .toast button{border:none;background:rgba(255,255,255,.14);color:#fff;font-weight:600;
     font-size:13px;padding:6px 13px;border-radius:999px;white-space:nowrap;}
 
@@ -294,12 +309,34 @@
     <div id="sync-off">
       <p class="sync-t">Per ora firme e lavori restano in questo browser. Attiva la casa
         condivisa e li ritrovate su tutti i dispositivi che collegate.</p>
-      <div class="sync-btns">
+      <div class="sync-btns" id="sync-scelte">
         <button id="crea" class="btn-p" type="button">Attiva la casa condivisa</button>
         <button id="entra" class="btn-s" type="button">Ho già un codice</button>
       </div>
+      <form class="nuova" id="nuova" hidden>
+        <div class="campo">
+          <span class="cap">Come si chiama la casa</span>
+          <input id="casa-nome" type="text" maxlength="40" placeholder="Casa Rossi"
+                 autocomplete="off" aria-label="Nome della casa">
+        </div>
+        <div class="campo">
+          <span class="cap">Chi ci abita</span>
+          <div class="due">
+            <input id="gestore-a" type="text" maxlength="18" placeholder="Nome"
+                   autocomplete="off" aria-label="Nome della prima persona">
+            <input id="gestore-b" type="text" maxlength="18" placeholder="Nome"
+                   autocomplete="off" aria-label="Nome della seconda persona">
+          </div>
+        </div>
+        <p class="nota">I nomi si scelgono adesso: dopo restano questi, su tutti i dispositivi.</p>
+        <div class="sync-btns">
+          <button type="submit" class="btn-p">Crea la casa</button>
+          <button type="button" class="btn-s" id="annulla-crea">Annulla</button>
+        </div>
+      </form>
     </div>
     <div id="sync-on" hidden>
+      <p class="casa-titolo" id="casa-titolo"></p>
       <p class="sync-t"><span class="dot" id="dot"></span><span id="stato-testo"></span></p>
       <div class="codice" id="codice"></div>
       <div class="sync-btns">

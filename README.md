@@ -39,6 +39,8 @@ app vera, con l'icona e senza barra degli indirizzi:
 ## 3. Come si usa
 
 - **Scrivete i vostri nomi** nelle due schede in alto: l'iniziale diventa la firma.
+  Se avete acceso la casa condivisa i nomi si scelgono quando la si crea, e dopo
+  restano quelli (le schede diventano non modificabili).
 - **Scegliete chi sta segnando** toccando (o cliccando) la sua scheda: è quella con
   la cornice colorata. L'iniziale compare anche dentro il tasto tratteggiato di
   ogni lavoro, così si vede sempre per chi vale il colpo.
@@ -76,16 +78,24 @@ cinque minuti di clic su Firebase: il piano gratuito basta e avanza.
    `https://<progetto>-default-rtdb.europe-west1.firebasedatabase.app`.
 
 Poi, dall'app: in fondo compare la scheda **«Su più dispositivi»** →
-**Attiva la casa condivisa** → **Manda il link all'altro dispositivo**. Chi riceve
-il link lo apre e conferma: da quel momento vedete gli stessi dati. In alternativa,
+**Attiva la casa condivisa**. L'app chiede come si chiama la casa e i nomi di chi
+ci abita: **è l'unico momento in cui si scelgono i nomi**, dopo restano quelli su
+tutti i dispositivi. Fatto questo, **Manda il link all'altro dispositivo**: chi lo
+riceve lo apre e conferma, e da quel momento vedete gli stessi dati. In alternativa,
 **«Ho già un codice»** e si incolla il codice della casa.
+
+Il nome della casa serve a capire al volo dove si è finiti — comodo se un domani
+create una seconda casa, o se qualcuno si collega al posto sbagliato.
 
 Cosa aspettarsi:
 - Le modifiche compaiono sugli altri dispositivi in un attimo, senza ricaricare niente.
 - Senza rete si continua a segnare: la scheda dice quante modifiche sono in attesa
   e le manda da sola appena la rete torna, anche se nel frattempo hai chiuso l'app.
 - Chi entra in una casa **adotta i dati di quella casa**: quelli che aveva vengono
-  sostituiti (l'app lo chiede prima di procedere).
+  sostituiti (l'app lo chiede prima di procedere). Quindi conviene creare la casa
+  dal dispositivo che ha già i dati buoni.
+- Per cambiare i nomi bisogna **Scollega** e creare una casa nuova: i nomi fanno
+  parte della casa, non del dispositivo.
 - **Chi ha il codice della casa può leggere e scrivere quei dati.** Il codice è
   lungo e casuale e non è elencabile da fuori, ma trattalo come una password: è
   una lista di lavori di casa, non il conto in banca. Per cambiare, *Scollega* e

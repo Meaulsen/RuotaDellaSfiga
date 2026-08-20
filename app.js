@@ -95,7 +95,7 @@ const stato = {
   attivo: "a",   // chi sta segnando: vale solo su questo dispositivo
   casa: null,    // codice della casa condivisa, se accesa
   coda: {},      // scritture non ancora spedite: percorso -> valore (null = cancella)
-  dati: { nomi: { a: "", b: "" }, extra: {}, settimane: {} }
+  dati: { nome: "", nomi: { a: "", b: "" }, extra: {}, settimane: {} }
 };
 
 function leggiMemoria() {
@@ -273,6 +273,9 @@ function disegnaBilancio() {
     card.querySelector(".pcount small").textContent = conta[p] === 1 ? "firma" : "firme";
     const input = card.querySelector(".pname");
     if (document.activeElement !== input) input.value = stato.dati.nomi[p] || "";
+    // i nomi appartengono alla casa: si scelgono quando la si crea
+    input.readOnly = !!stato.casa;
+    input.placeholder = stato.casa ? "" : "Nome";
   });
 
   const d = conta.a - conta.b;
@@ -290,6 +293,7 @@ function disegnaSync() {
   $("#sync-off").hidden = !!stato.casa;
   $("#sync-on").hidden = !stato.casa;
   if (stato.casa) {
+    $("#casa-titolo").textContent = stato.dati.nome || "La vostra casa";
     $("#codice").textContent = stato.casa;
     const inCoda = Object.keys(stato.coda).length;
     $("#dot").dataset.stato = collegati ? "on" : "off";
@@ -420,7 +424,7 @@ async function accendi() {
     collegamento = await nube.collega(stato.casa, {
       onDati: (remoto) => {
         // quello che c'è nella casa vince, tranne le modifiche ancora in coda
-        stato.dati = Object.assign({ nomi: { a: "", b: "" }, extra: {}, settimane: {} }, remoto);
+        stato.dati = Object.assign({ nome: "", nomi: { a: "", b: "" }, extra: {}, settimane: {} }, remoto);
         Object.keys(stato.coda).forEach((p) => applica(stato.dati, p, stato.coda[p]));
         salva(); disegna();
       },
@@ -441,12 +445,36 @@ function spegni() {
 }
 
 $("#crea").addEventListener("click", () => {
+  $("#sync-scelte").hidden = true;
+  $("#nuova").hidden = false;
+  $("#gestore-a").value = stato.dati.nomi.a || "";
+  $("#gestore-b").value = stato.dati.nomi.b || "";
+  $("#casa-nome").focus();
+});
+
+$("#annulla-crea").addEventListener("click", () => {
+  $("#nuova").hidden = true;
+  $("#sync-scelte").hidden = false;
+});
+
+$("#nuova").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const casa = $("#casa-nome").value.trim();
+  const a = $("#gestore-a").value.trim();
+  const b = $("#gestore-b").value.trim();
+  const manca = !casa ? $("#casa-nome") : !a ? $("#gestore-a") : !b ? $("#gestore-b") : null;
+  if (manca) {
+    manca.focus();
+    avvisa("Servono il nome della casa e quelli di tutti e due");
+    return;
+  }
+
+  stato.dati.nome = casa;
+  stato.dati.nomi = { a: a, b: b };
   stato.casa = codice(20);
+
   // la casa nasce con quello che c'è già in questo browser
-  stato.coda = {};
-  Object.keys(stato.dati.nomi).forEach((p) => {
-    if (stato.dati.nomi[p]) stato.coda["nomi/" + p] = stato.dati.nomi[p];
-  });
+  stato.coda = { "nome": casa, "nomi/a": a, "nomi/b": b };
   Object.keys(stato.dati.extra).forEach((id) => { stato.coda["extra/" + id] = stato.dati.extra[id]; });
   Object.keys(stato.dati.settimane).forEach((k) => {
     const s = stato.dati.settimane[k];
@@ -455,8 +483,11 @@ $("#crea").addEventListener("click", () => {
       stato.coda["settimane/" + k + "/firme/" + id] = s.firme[id];
     });
   });
-  salva(); disegnaSync(); accendi();
-  avvisa("Casa condivisa attivata");
+
+  $("#nuova").hidden = true;
+  $("#sync-scelte").hidden = false;
+  salva(); disegna(); accendi();
+  avvisa("«" + casa + "» è pronta: manda il link all'altro dispositivo");
 });
 
 $("#entra").addEventListener("click", () => { entra(window.prompt("Incolla qui il codice della casa")); });
@@ -486,7 +517,7 @@ $("#scollega").addEventListener("click", () => {
   if (!window.confirm("Questo dispositivo smette di sincronizzarsi. I dati restano qui. Vado?")) return;
   spegni();
   stato.casa = null; stato.coda = {};
-  salva(); disegnaSync();
+  salva(); disegna();
   avvisa("Scollegato");
 });
 

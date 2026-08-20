@@ -40,9 +40,20 @@ const conta = (p, c) => p.evaluate((x) => document.querySelector('.person[data-p
   await A.p.fill('.person[data-p="b"] .pname', 'Sara');
   await A.p.click('[data-add="piatti"]');
   await A.p.click('#crea');
+  await A.p.click('#nuova button[type="submit"]');   // modulo vuoto: non deve creare niente
+  v('senza nome della casa non si crea niente',
+    await A.p.evaluate(() => document.getElementById('sync-on').hidden));
+  await A.p.fill('#casa-nome', 'Casa di prova');
+  await A.p.fill('#gestore-a', 'Ludo');
+  await A.p.fill('#gestore-b', 'Sara');
+  await A.p.click('#nuova button[type="submit"]');
   v('si collega davvero al database', await finoA(async () =>
     (await A.p.textContent('#stato-testo')).includes('vedete gli stessi dati')));
   const casa = (await A.p.textContent('#codice')).trim();
+  v('la scheda mostra il nome della casa',
+    (await A.p.textContent('#casa-titolo')).trim() === 'Casa di prova');
+  v('dentro una casa i nomi non si possono più cambiare',
+    await A.p.evaluate(() => document.querySelector('.person[data-p="a"] .pname').readOnly));
   console.log('  codice casa:', casa);
 
   v('le regole accettano quello che scrive l\'app', await finoA(async () => {
@@ -53,6 +64,8 @@ const conta = (p, c) => p.evaluate((x) => document.querySelector('.person[data-p
   await B.p.goto(SITO + '?casa=' + casa, { waitUntil: 'load' });
   v('B entra col link e vede i dati di A', await finoA(async () =>
     (await B.p.inputValue('.person[data-p="a"] .pname')) === 'Ludo' && await firme(B.p, 'piatti') === 1));
+  v('B vede anche il nome della casa', await finoA(async () =>
+    (await B.p.textContent('#casa-titolo')).trim() === 'Casa di prova'));
 
   await B.p.click('.person[data-p="b"] .pick');
   await B.p.click('[data-add="cena"]');
