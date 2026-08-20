@@ -53,6 +53,9 @@ app vera, con l'icona e senza barra degli indirizzi:
 - Le frecce **‹ ›** in alto spostano la settimana: le settimane vecchie restano lì,
   ogni lunedì si riparte da zero senza dover cancellare niente.
 - **«Un lavoro che qui non c'è»** aggiunge i vostri lavori; la **×** li toglie.
+- Ogni lavoro ha la sua **faccina** di fianco al nome, per riconoscerlo al volo;
+  per i lavori che aggiungete voi la sceglie l'app dalla parola che riconosce
+  («cane» → 🐕, «vetri» → 🪟), e se non ne trova nessuna resta una puntina.
 - Le note della settimana e i nomi si salvano da soli.
 
 ## 4. Accendere la casa condivisa (Firebase)
