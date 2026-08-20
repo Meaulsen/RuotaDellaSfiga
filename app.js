@@ -170,6 +170,7 @@ function spedisci() {
     /* resta in coda: riproveremo al prossimo cambio o al prossimo collegamento */
   }).then(() => {
     spedizioneInCorso = false;
+    disegnaSync();   // la scritta "in attesa / collegato" deve seguire la coda
     if (Object.keys(stato.coda).length && collegati) setTimeout(spedisci, 1500);
   });
 }

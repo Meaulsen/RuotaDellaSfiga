@@ -6,8 +6,9 @@
         ".write": "$casa.length >= 16 && $casa.length <= 40",
 
         "nomi": {
-          "$chi": { ".validate": "newData.isString() && newData.val().length <= 40" },
-          "$altro": { ".validate": "$chi == 'a' || $chi == 'b'" }
+          "$chi": {
+            ".validate": "($chi == 'a' || $chi == 'b') && newData.isString() && newData.val().length <= 40"
+          }
         },
 
         "extra": {
