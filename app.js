@@ -6,36 +6,93 @@
 
 import * as nube from "./nube.js";
 
-/* ── I lavori. L'ultimo numero è quante volte andrebbe fatto in una settimana:
+/* ── I lavori. Il numero è quante volte andrebbe fatto in una settimana:
       è la vecchia colonna "ogni quanto", che qui serve a mostrare a che punto
-      siete. Il codice fra virgolette è quello con cui si salvano le firme:
-      non cambiatelo per i lavori già in uso. ─────────────────────────────── */
+      siete. L'ultima casella è la faccina che accompagna il lavoro: si vede
+      di fianco al nome e serve solo a riconoscerlo al volo. Il codice fra
+      virgolette è quello con cui si salvano le firme: non cambiatelo per i
+      lavori già in uso. ──────────────────────────────────────────────────── */
 const GRUPPI = [
   { nome: "Cucina & pasti", tinta: "", lavori: [
-    ["piatti",        "Lavare i piatti / caricare la lavastoviglie", 7],
-    ["svuotare",      "Svuotare la lavastoviglie",                   7],
-    ["fornelli",      "Pulire piano e fornelli",                     3],
-    ["cena",          "Cucinare la cena",                            7],
-    ["tavola",        "Apparecchiare / sparecchiare",                7]
+    ["piatti",        "Lavare i piatti / caricare la lavastoviglie", 7, "🍽️"],
+    ["svuotare",      "Svuotare la lavastoviglie",                   7, "🥣"],
+    ["fornelli",      "Pulire piano e fornelli",                     3, "🔥"],
+    ["cena",          "Cucinare la cena",                            7, "🍝"],
+    ["tavola",        "Apparecchiare / sparecchiare",                7, "🍴"]
   ]},
   { nome: "Pulizie di casa", tinta: "b", lavori: [
-    ["aspirapolvere", "Passare l'aspirapolvere",                     2],
-    ["pavimenti",     "Lavare i pavimenti",                          1],
-    ["spolverare",    "Spolverare",                                  1],
-    ["bagno",         "Pulire il bagno",                             1]
+    ["aspirapolvere", "Passare l'aspirapolvere",                     2, "🧹"],
+    ["pavimenti",     "Lavare i pavimenti",                          1, "🪣"],
+    ["spolverare",    "Spolverare",                                  1, "🪶"],
+    ["bagno",         "Pulire il bagno",                             1, "🚿"]
   ]},
   { nome: "Bucato", tinta: "", lavori: [
-    ["lavatrice",     "Fare la lavatrice",                           3],
-    ["stendere",      "Stendere il bucato",                          3],
-    ["piegare",       "Piegare, riporre e stirare",                  2]
+    ["lavatrice",     "Fare la lavatrice",                           3, "🧼"],
+    ["stendere",      "Stendere il bucato",                          3, "🧺"],
+    ["piegare",       "Piegare, riporre e stirare",                  2, "👕"]
   ]},
   { nome: "Fuori & varie", tinta: "b", lavori: [
-    ["spesa",         "Fare la spesa",                               2],
-    ["rifiuti",       "Rifiuti e differenziata",                     7],
-    ["piante",        "Innaffiare le piante",                        2],
-    ["lenzuola",      "Cambio lenzuola / asciugamani",               1]
+    ["spesa",         "Fare la spesa",                               2, "🛒"],
+    ["rifiuti",       "Rifiuti e differenziata",                     7, "🗑️"],
+    ["piante",        "Innaffiare le piante",                        2, "🪴"],
+    ["lenzuola",      "Cambio lenzuola / asciugamani",               1, "🛏️"]
   ]}
 ];
+
+/* Per i lavori che aggiungete voi la faccina non c'è scritta da nessuna
+   parte: la indoviniamo dal nome, cercando una parola conosciuta. Se non
+   ne troviamo nessuna resta la puntina. */
+const FACCINE = [
+  [/cane|guinzagli|passeggiat/,        "🐕"],
+  [/gatt|lettier/,                     "🐈"],
+  [/pesc|acquari/,                     "🐠"],
+  [/spesa|supermercat/,                "🛒"],
+  [/auto|macchina|benzina|gomme/,      "🚗"],
+  [/bicicl/,                           "🚲"],
+  [/bimb|bambin|figl|nido|scuola/,     "🧸"],
+  [/compiti|studiar/,                  "✏️"],
+  [/nonn|parenti|suocer/,              "👵"],
+  [/telefon|chiamar/,                  "📞"],
+  [/post|lettera|pacc/,                "📮"],
+  [/bollett|conti|banca|sold|pagar/,   "💶"],
+  [/giardin|erba|prat|siepe|foglie/,   "🌿"],
+  [/piant|fiori|innaffi|annaffi/,      "🪴"],
+  [/orto|verdur/,                      "🥕"],
+  [/letto|lenzuol|materass/,           "🛏️"],
+  [/bagno|doccia|water|wc|sanitari/,   "🚿"],
+  [/asciugaman|salviett/,              "🧻"],
+  [/piatt|lavastovigl/,                "🍽️"],
+  [/cucinar|cena|pranzo|colazione/,    "🍝"],
+  [/forn|padell|pentol/,               "🍳"],
+  [/pane|dolc|torta/,                  "🥖"],
+  [/caff/,                             "☕"],
+  [/frigo|congelat|freezer/,           "🧊"],
+  [/dispensa|scort/,                   "🥫"],
+  [/lavatrice|bucato|lavare i pann/,   "🧼"],
+  [/stend|asciugatric/,                "🧺"],
+  [/stir|pieg|armadi|vestit/,          "👕"],
+  [/scarp/,                            "👟"],
+  [/finestr|vetri|tapparell|balcon/,   "🪟"],
+  [/spolver|polvere/,                  "🪶"],
+  [/aspirapolvere|scop|briciol/,       "🧹"],
+  [/paviment|straccio|mocio/,          "🪣"],
+  [/rifiut|spazzatur|immondizi|differenziat|umido|vetro|plastica/, "🗑️"],
+  [/ripar|aggiust|monta|vite|trapan/,  "🔧"],
+  [/dipinger|tinteggiar|verniciar/,    "🎨"],
+  [/comput|pc|stampant|wifi|internet/, "💻"],
+  [/farmac|medicin|dottor|visita/,     "💊"],
+  [/palestr|corsa|sport|allenam/,      "🏃"],
+  [/libr|legger|bibliotec/,            "📚"],
+  [/music|dischi|chitarr/,             "🎵"],
+  [/regal|complean|festa/,             "🎁"],
+  [/neve|ghiacci/,                     "❄️"],
+  [/valig|viaggi|partenz/,             "🧳"]
+];
+function faccina(nome) {
+  const t = String(nome || "").toLowerCase();
+  const trovata = FACCINE.find(([parola]) => parola.test(t));
+  return trovata ? trovata[1] : "📌";
+}
 
 const QUANDO = { 7: "ogni giorno", 3: "2–3 volte a settimana",
                  2: "2 volte a settimana", 1: "1 volta a settimana" };
@@ -200,13 +257,15 @@ const iniziale = (p) => {
 function elenco() {
   const gruppi = GRUPPI.map((g) => ({
     nome: g.nome, tinta: g.tinta,
-    lavori: g.lavori.map((l) => ({ id: l[0], nome: l[1], obiettivo: l[2], mio: false }))
+    lavori: g.lavori.map((l) => ({ id: l[0], nome: l[1], obiettivo: l[2],
+                                   faccina: l[3], mio: false }))
   }));
   const miei = Object.keys(stato.dati.extra || {});
   if (miei.length) {
     gruppi.push({ nome: "I vostri lavori", tinta: "", lavori: miei.map((id) => ({
       id: id, nome: stato.dati.extra[id].nome,
-      obiettivo: stato.dati.extra[id].obiettivo, mio: true
+      obiettivo: stato.dati.extra[id].obiettivo,
+      faccina: faccina(stato.dati.extra[id].nome), mio: true
     }))});
   }
   return gruppi;
@@ -241,6 +300,7 @@ function disegnaLavori() {
         '" aria-label="Togli la firma di ' + esc(nome(v.c)) + '"><span>' +
         esc(iniziale(v.c)) + "</span></button>").join("");
       return '<div class="task' + (fatto ? " done" : "") + '">' +
+               '<span class="t-faccia" aria-hidden="true">' + esc(l.faccina) + "</span>" +
                '<div class="t-main"><div class="t-name">' + esc(l.nome) + "</div>" +
                  '<div class="t-meta">' + (fatto ? "✓ " : "") + "<b>" + f.length + "</b> di " +
                  l.obiettivo + " · " + QUANDO[l.obiettivo] + "</div></div>" +
